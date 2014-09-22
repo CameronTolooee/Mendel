@@ -1,0 +1,18 @@
+# Eclipse files
+.project
+.classpath
+.build
+
+# Local dev files
+classes
+depcache
+build.properties
+
+# javadoc-generated documentation
+docs/api
+
+# Mac OS File Attributes
+.DS_Store
+
+# Binaries
+lib/galileo-[0-9].[0-9].jar
