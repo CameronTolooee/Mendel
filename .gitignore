@@ -2,6 +2,7 @@
 .project
 .classpath
 .build
+.metadata
 
 # Local dev files
 classes
