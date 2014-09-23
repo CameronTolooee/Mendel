@@ -1,25 +1,89 @@
-<project>
+<project name="Mendel" basedir="." default="build">
 
-    <target name="clean">
-        <delete dir="build"/>
+    <!-- Build property definitions -->
+    <property name="version"     value="0.1" />
+    <property name="url"         value="http://mendel.cs.colostate.edu" />
+    <tstamp>
+        <format property="build.date" pattern="MM/dd/yyyy" />
+    </tstamp>    
+
+    <!-- Directory definitions -->
+    <property name="src.dir"     value="src" />
+    <property name="build.dir"   value="build" />
+    <property name="classes.dir" value="${build.dir}/classes" />
+    <property name="jar.dir"     value="${build.dir}/jar" />
+    <property name="docs.dir"    value="docs" />
+    <property name="lib.dir"     value="lib" />
+
+    <property name="build.name"  value="${ant.project.name}-${version}.jar" />
+
+    <property name="main-class"  value="test.TestClient" />
+
+    <!-- Clean project for release version -->
+    <target name="cleanrelease">
+        <delete dir="${build.dir}" />
     </target>
 
+
+    <!-- Clean up build directory -->
+    <target name="clean" depends="cleanrelease">
+        <delete dir="${docs}" />
+        <delete file="build.name" />
+    </target>
+
+
+    <!-- Compile source code -->
     <target name="compile">
-        <mkdir dir="build/classes"/>
-        <javac srcdir="src" destdir="build/classes"/>
+        <mkdir dir="${classes.dir}" />
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false" />
     </target>
 
-    <target name="jar">
-        <mkdir dir="build/jar"/>
-        <jar destfile="lib/Mendel.jar" basedir="build/classes">
+    <target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <jar destfile="${jar.dir}/${build.name}.jar" basedir="${classes.dir}">
             <manifest>
-                <attribute name="Main-Class" value="test.TestClient"/>
+                <attribute name="Main-Class" value="${main-class}"/>
             </manifest>
         </jar>
     </target>
 
-    <target name="run">
-        <java jar="lib/Mendel.jar" fork="true"/>
+    <!-- Javadoc generator -->
+    <target name="javadoc" description="Generates javadoc">
+        <mkdir dir="${docs.dir}"/>
+
+        <property name="doctitle"
+                value="${ant.project.name} ${version} Documentation"/>
+
+        <javadoc sourcepath="${src.dir}"
+                destdir="${docs.dir}"
+                doctitle="${doctitle}"
+                windowtitle="${doctitle}"/>
     </target>
 
+    <target name="run" depends="jar">
+        <java jar="${jar.dir}/${ant.project.name}.jar" fork="true"/>
+    </target>
+
+
+
+    <target name="build" depends="clean,compile"/>
+    <target name="cleanbuild" depends="clean,jar"/>
+    <target name="cleanrun" depends="clean,run"/>
+    <target name="release" depends="compile,jar,javadoc,cleanrelease">
+        <echo>Generating release ${version}</echo>
+        <echo>Built by: ${user.name} on ${build.date}</echo>
+        <echo>Operating System: ${os.name} ${os.version}</echo>
+
+        <property name="reldir"
+            value="release/${ant.project.name}-${version}"/>
+        <mkdir dir="${reldir}"/>
+        <copy todir="${reldir}">
+            <!-- ignore hidden files -->
+            <fileset dir="." excludes="**/.*"/>
+        </copy>
+        <delete dir="${reldir}/release"/>
+        <zip destfile="${ant.project.name}-${version}.zip"
+             basedir="release"/>
+        <delete dir="release"/>
+    </target>
 </project>
