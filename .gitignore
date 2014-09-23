@@ -3,6 +3,7 @@
 .classpath
 .build
 .metadata
+.settings
 
 # Local dev files
 classes
