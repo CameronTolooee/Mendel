@@ -23,7 +23,7 @@
  * possibility of such damage.
  */
 
-package dht;
+package mendel.dht;
 
 public interface Node {
 

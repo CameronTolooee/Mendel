@@ -23,7 +23,7 @@
  * possibility of such damage.
  */
 
-package test;
+package mendel.test;
 
 /**
  * 
