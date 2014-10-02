@@ -18,17 +18,18 @@ In general, the best way to accomplish this is to generate a public and private 
 Mendel Configuration
 --------------------
 
-Mendel doesn't necessarily require any configuration, and will try to store everything in its installation directory if it is writable. This is fine for a single-node setup for testing purposes, but if you want to run a fully-fledged cluster you must modify the `config.properties` file in the conf/ directory.
+Mendel doesn't necessarily require any configuration, and will try to store everything in its installation directory if it is writable. This is fine for a single-node setup for testing purposes, but if you want to run a fully-fledged cluster you must modify the `conf/config.properties` file in the conf/ directory.
 
 ### Property Configuration
-The `config.properties` file specifies two major properties:
+The `conf/config.properties` file specifies two major properties:
 * mendel.home.dir -- Mendel installation directory
 * mendel.root.dir -- Where the file system root is stored. Files, journal, logs, etc... live here
-All the property specifications are described in the `config.properties` file with examples.
+
+All the property specifications are described in the `conf/config.properties` file with examples.
 
 ### Storage Nodes
 
-At a minimum, you must specify the storage nodes that make up your cluster. The `nodes` file contain a list of hosts to act as the storage nodes. The file contains host names or IP addresses, one per line, and their storage node port number (if not set the default port will be used). An example `nodes` file is shown below:
+You must specify the storage nodes that make up your cluster. The `conf/nodes` file contain a list of hosts to act as the storage nodes. The file contains host names or IP addresses, one per line, and their storage node port number (if not set the default port will be used). An example `nodes` file is shown below:
 ```
 lattice-0:8989
 lattice-1
