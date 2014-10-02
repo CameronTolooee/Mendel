@@ -12,7 +12,7 @@
     <property name="build.dir"   value="build" />
     <property name="classes.dir" value="${build.dir}/classes" />
     <property name="jar.dir"     value="${build.dir}/jar" />
-    <property name="docs.dir"    value="docs" />
+    <property name="docs.dir"    value="docs/api" />
     <property name="lib.dir"     value="lib" />
 
     <property name="build.name"  value="${ant.project.name}-${version}.jar" />
