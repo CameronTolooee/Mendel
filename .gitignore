@@ -18,4 +18,4 @@ docs/api
 .DS_Store
 
 # Binaries
-lib/galileo-[0-9].[0-9].jar
+lib/Mendel-[0-9].[0-9].jar
