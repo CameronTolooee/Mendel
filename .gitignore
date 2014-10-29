@@ -9,6 +9,7 @@
 classes
 depcache
 build.properties
+config.properties
 
 # javadoc-generated documentation
 docs/api
