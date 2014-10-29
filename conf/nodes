@@ -7,7 +7,10 @@
     #                                  #
     ####################################
 
-# List host names or ip addresses, one per line, and optionally their node port number.
+# List host names or ip addresses, one per line, by group. Group names are 
+# prefaced with a '$'. all nodes following a group name will belong to that 
+# group.
+  
 # The default port is used if none is specified
 
 # Example:
@@ -17,8 +20,12 @@
 # 129.82.45.256
 # 129.82.45.257:9999 
 
+$A
 lattice-0
 lattice-1
 lattice-2
+
+$B
 lattice-3
 lattice-4
+lattice-5
