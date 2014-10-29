@@ -76,6 +76,7 @@ if [[ ${stop} == true || ${restart} == true ]]; then
     fi
 fi
 
+
 # start
 pgrep --pidfile "${pidpath}" &> /dev/null
 if [[ ${?} -eq 0 ]]; then
@@ -84,8 +85,8 @@ if [[ ${?} -eq 0 ]]; then
     exit 0
 fi
 java -classpath ../lib/\* -D"pidFile=${pidpath}" \
+    -Dconfig.properties="../conf/config.properties" \
     ${class} &> "${logpath}" &
 
 (echo "${!}") 2> /dev/null > "${pidpath}"
-(echo "Starting") 2> /dev/null > "${statuspath}"
 sleep 1
