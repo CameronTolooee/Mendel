@@ -25,11 +25,13 @@
 
 package mendel.config;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
-
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Properties;
 
 /**
  * Provides general system configuration information. The settings contained
@@ -90,19 +92,18 @@ public class SystemConfig {
      */
     private static void load() {
         Properties prop = new Properties();
-        String propFile = "config.properties";
-        InputStream is = SystemConfig.class.getClassLoader().getResourceAsStream(
-                propFile);
+        String propFile = System.getProperty("config.properties");
+        InputStream is = null;
         try {
+            is = new FileInputStream(new File(propFile));
             prop.load(is);
+        } catch (FileNotFoundException e) {
+            logger.log(Level.SEVERE, "Unable to find properties file: "
+                    + propFile + ". ");
+            return;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Unable to read properties file: "
                     + propFile + ". " + e);
-            return;
-        }
-        if (is == null) {
-            logger.log(Level.SEVERE, "Unable to find properties file: "
-                    + propFile + ". ");
             return;
         }
 
@@ -113,19 +114,23 @@ public class SystemConfig {
         }
         homeDir = home;
         logger.info("Mendel home directory set to: " + homeDir);
-        
-        confDir = homeDir + "/conf";
+
+        confDir = homeDir.charAt(homeDir.length() - 1) == '/' ? homeDir + "conf"
+                : homeDir + "/conf";
         logger.info("Mendel configuration directory set to: " + confDir);
-        
-        String storageDir = System.getenv("mendel.root.dir");
+
+        String storageDir = prop.getProperty("mendel.root.dir");
         if (storageDir == null || storageDir.equals("")) {
             logger.warning("Property mendel.root.dir not defined.");
             storageDir = DEFAULT_STOREDIR;
         }
         rootDir = storageDir;
-        logger.info("Mendel file system storage root set to: " + confDir);
+        logger.info("Mendel file system storage root set to: " + rootDir);
     }
 
+    /**
+     * Loads the System configuration information once.
+     */
     static {
         load();
     }
