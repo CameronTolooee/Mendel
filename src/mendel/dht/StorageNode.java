@@ -65,33 +65,7 @@ public class StorageNode implements Node {
                     e);
             return;
         } 
-
-        /*
-         * Set up the FileSystem. try { fs = new GeospatialFileSystem(rootDir);
-         * } catch (FileSystemException e) {
-         * nodeStatus.set("File system initialization failure");
-         * logger.log(Level.SEVERE,
-         * "Could not initialize the Galileo File System!", e); return; }
-         * 
-         * // /* Set up our Shutdown hook
-         */
-        // Runtime.getRuntime().addShutdownHook(new ShutdownHandler());
-        //
-        // /* Pre-scheduler setup tasks */
-        // connectionPool = new ClientConnectionPool();
-        // connectionPool.addListener(eventReactor);
-        // configurePartitioner();
-        //
-        // /* Start listening for incoming messages. */
-        // messageRouter = new ServerMessageRouter();
-        // messageRouter.addListener(eventReactor);
-        // messageRouter.listen(port);
-        // nodeStatus.set("Online");
-        //
-        // /* Start processing the message loop */
-        // while (true) {
-        // eventReactor.processNextEvent();
-        // }
+        System.out.println(network);
     }
 
     /**
@@ -99,7 +73,7 @@ public class StorageNode implements Node {
      * 
      * @param args
      */
-    public static void main(String args) {
+    public static void main(String[] args) {
         Node node = new StorageNode();
         try {
             node.init();
