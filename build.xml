@@ -3,6 +3,7 @@
     <!-- Build property definitions -->
     <property name="version"     value="0.1" />
     <property name="url"         value="http://mendel.cs.colostate.edu" />
+	<property name="organization" value="Colorado State University" />
     <tstamp>
         <format property="build.date" pattern="MM/dd/yyyy" />
     </tstamp>    
@@ -11,11 +12,11 @@
     <property name="src.dir"     value="src" />
     <property name="build.dir"   value="build" />
     <property name="classes.dir" value="${build.dir}/classes" />
-    <property name="jar.dir"     value="${build.dir}/jar" />
+    <property name="jar.dir"     value="lib" />
     <property name="docs.dir"    value="docs/api" />
     <property name="lib.dir"     value="lib" />
 
-    <property name="build.name"  value="${ant.project.name}-${version}.jar" />
+    <property name="build.name"  value="${ant.project.name}-${version}" />
 
     <property name="main-class"  value="test.TestClient" />
 
@@ -43,6 +44,9 @@
         <jar destfile="${jar.dir}/${build.name}.jar" basedir="${classes.dir}">
             <manifest>
                 <attribute name="Main-Class" value="${main-class}"/>
+            	<attribute name="Specification-Title" value="${build.name}"/>
+        	    <attribute name="Specification-Version" value="${version}"/>
+        	    <attribute name="Specification-Vendor" value="${organization}"/>
             </manifest>
         </jar>
     </target>
@@ -66,7 +70,7 @@
 
 
 
-    <target name="build" depends="clean,compile"/>
+    <target name="build" depends="clean,compile,jar"/>
     <target name="cleanbuild" depends="clean,jar"/>
     <target name="cleanrun" depends="clean,run"/>
     <target name="release" depends="compile,jar,javadoc,cleanrelease">
