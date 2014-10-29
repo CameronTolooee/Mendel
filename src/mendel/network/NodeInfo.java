@@ -59,4 +59,9 @@ public class NodeInfo implements ByteSerializable {
         out.writeString(hostname);
         out.writeInt(port);
     }
+    
+    @Override
+    public String toString(){
+        return hostname+":"+port;
+    }
 }
