@@ -27,4 +27,6 @@ package mendel.dht;
 
 public interface Node {
 
+    public void init();
+
 }
