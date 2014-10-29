@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+################################################################################
+# mendel-node - manages the execution of a Mendel Storage Node.
+# Stolen from Matthew Malensek
+################################################################################
+
+unset restart statuspath status stop use_color
+signal="SIGTERM"
+
+class="mendel.dht.StorageNode"
+logfile="storage-node.log"
+pidfile="storage-node.pid"
+
+print_usage() {
+cat <<EOM
+Usage: $(basename ${0}) [-cf] [command]
+
+Commands:
+    start (default) - starts a Storage Node instance.
+    stop - cleanly shuts down active Storage Node instances.
+    restart - performs the 'stop' and then 'start' commands.
+
+Options:
+    -c             colorize output
+    -f             forceful shutdown (SIGKILL)
+EOM
+}
+
+
+
+source "$(cd "$(dirname "$0")" && pwd)/funcs.sh"
+
+# parse options
+while getopts "cf:" flag; do
+    case ${flag} in
+        c) use_color=true ;;
+        f) signal="SIGKILL" ;;
+        ?) print_usage; exit 1 ;;
+    esac
+done
+
+# parse commands
+shift $(($OPTIND - 1))
+if [[ -n ${1} ]]; then
+    case ${1,,} in
+        "start") ;;
+        "stop") stop=true ;;
+        "restart") restart=true ;;
+
+        *) echo "Unknown command: ${1}"; exit 1 ;;
+    esac
+fi
+
+# determine paths
+logdir="${TMPDIR:-/tmp/}$(whoami)-mendel"
+
+mkdir -p "${logdir}" &> /dev/null
+logpath="${logdir}/${logfile}"
+pidpath="${logdir}/${pidfile}"
+
+# stop/restart
+if [[ ${stop} == true || ${restart} == true ]]; then
+    message="Offline"
+
+    blocking_pkill --uid "$(whoami)" --full "${class}" \
+        --pidfile "${pidpath}" --signal "${signal}"
+
+    if [[ ${?} -eq 1 ]]; then
+        message="${message} (no instance found)"
+    fi
+
+    if [[ ${stop} == true ]]; then
+        print_status "${message}"
+        exit 0
+    fi
+fi
+
+# start
+pgrep --pidfile "${pidpath}" &> /dev/null
+if [[ ${?} -eq 0 ]]; then
+    # There is already an instance running; print its status and exit.
+
+    exit 0
+fi
+java -classpath ../lib/\* -D"pidFile=${pidpath}" \
+    ${class} &> "${logpath}" &
+
+(echo "${!}") 2> /dev/null > "${pidpath}"
+(echo "Starting") 2> /dev/null > "${statuspath}"
+sleep 1
