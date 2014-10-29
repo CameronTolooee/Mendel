@@ -68,12 +68,11 @@ public class NetworkConfig {
         directory = directory.charAt(directory.length() - 1) == '/' ? directory
                 : directory + "/";
 
-        File nodesFile = new File(directory);
+        File nodesFile = new File(directory+NODES_FILE_NAME);
         if (!nodesFile.exists()) {
             throw new FileNotFoundException("Could not find network "
                     + "configuration file: " + nodesFile.getAbsolutePath());
         }
-
         return readNodesFile(nodesFile);
     }
 
@@ -88,15 +87,15 @@ public class NetworkConfig {
      */
     public static NetworkInfo readNodesFile(File file)
             throws IOException {
+        
         NetworkInfo network = new NetworkInfo();
-
         FileReader fReader = new FileReader(file);
-
         BufferedReader reader = new BufferedReader(fReader);
         int lineNum = 0;
         String line;
         String groupName = null;
         GroupInfo group = null;
+        
         while ((line = reader.readLine()) != null) {
             ++lineNum;
             line = line.trim().replaceAll("\\s", "");
@@ -108,6 +107,7 @@ public class NetworkConfig {
                 }
                 groupName = line.substring(1, line.length());
                 group = new GroupInfo(groupName);
+                continue;
             }
 
             String[] hostInfo = line.split(":", 2);
@@ -144,6 +144,11 @@ public class NetworkConfig {
             }
         }
         reader.close();
+        
+        /* Add the last group */
+        if (group != null && group.getAllNodes().size() != 0) {
+            network.addGroup(group);
+        }
 
         return network;
     }
