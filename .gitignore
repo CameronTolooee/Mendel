@@ -5,6 +5,9 @@
 .metadata
 .settings
 
+# Intellij Files
+.idea
+
 # Local dev files
 classes
 depcache
