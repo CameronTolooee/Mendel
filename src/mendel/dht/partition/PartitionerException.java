@@ -23,26 +23,19 @@
  * possibility of such damage.
  */
 
-package mendel.dht.partition;
-
-import mendel.dht.StorageNode;
-import mendel.network.NetworkInfo;
-import mendel.network.NodeInfo;
-
 /**
- * Partition using a vantage point tree as a similarity based hash. To be
- * used as a primary hash function to hash data into groups.
+ *
  *
  * @author ctolooee
  */
-public class VPPartitioner<T> extends Partitioner<T> {
+package mendel.dht.partition;
 
-    public VPPartitioner(StorageNode storageNode, NetworkInfo network) {
-        super(storageNode, network);
+public class PartitionerException extends Exception {
+    public PartitionerException(String message) {
+        super(message);
     }
 
-    @Override
-    public NodeInfo locateData(T data) {
-        return null;
+    public PartitionerException() {
+        super();
     }
 }
