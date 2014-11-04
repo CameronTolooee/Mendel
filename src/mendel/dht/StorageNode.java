@@ -25,11 +25,6 @@
 
 package mendel.dht;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import mendel.config.NetworkConfig;
 import mendel.config.SystemConfig;
 import mendel.event.EventException;
@@ -41,6 +36,11 @@ import mendel.network.NetworkInfo;
 import mendel.network.ServerMessageRouter;
 import mendel.serialize.SerializationException;
 import mendel.util.Version;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class StorageNode implements Node {
     private static final Logger logger = Logger.getLogger("mendel");
@@ -57,6 +57,7 @@ public class StorageNode implements Node {
     private ClientConnectionPool connectionPool;
     private EventMap eventMap = new EventMap();
     private EventReactor eventReactor = new EventReactor(this, eventMap);
+
     public StorageNode() {
         this.port = NetworkConfig.DEFAULT_PORT;
         this.rootDir = SystemConfig.getRootDir();
@@ -64,6 +65,20 @@ public class StorageNode implements Node {
         String pid = System.getProperty("pidFile");
         if (pid != null) {
             this.pidFile = new File(pid);
+        }
+    }
+
+    /**
+     * Executable to be run on each Mendel storage server.
+     *
+     * @param args No args
+     */
+    public static void main(String[] args) {
+        Node node = new StorageNode();
+        try {
+            node.init();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "StorageNode failed to start.", e);
         }
     }
 
@@ -88,8 +103,13 @@ public class StorageNode implements Node {
             logger.log(Level.SEVERE, "Could not setup network infrastructure!",
                     e);
             return;
-        } 
+        }
         System.out.println(network);
+
+        /* Set up our Shutdown hook */
+        Runtime.getRuntime().addShutdownHook(new ShutdownHandler());
+
+
         /* Pre-scheduler setup tasks */
         connectionPool = new ClientConnectionPool();
         connectionPool.addListener(eventReactor);
@@ -99,23 +119,33 @@ public class StorageNode implements Node {
         messageRouter.addListener(eventReactor);
         messageRouter.listen(port);
 
+        System.out.println("Listening... ");
+
         /* Start processing the message loop */
         while (true) {
             eventReactor.processNextEvent();
         }
     }
 
-    /**
-     * Executable to be run on each Mendel storage server.
-     * 
-     * @param args No args
-     */
-    public static void main(String[] args) {
-        Node node = new StorageNode();
-        try {
-            node.init();
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "StorageNode failed to start.", e);
+    private class ShutdownHandler extends Thread {
+        @Override
+        public void run() {
+            /* The logging subsystem may have already shut down, so we revert to
+             * stdout. */
+            System.out.println("Shutdown initiated");
+
+            try {
+                connectionPool.forceShutdown();
+                messageRouter.shutdown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (pidFile != null && pidFile.exists()) {
+                pidFile.delete();
+            }
+
+            System.out.println("Goodbye!");
         }
     }
 }
