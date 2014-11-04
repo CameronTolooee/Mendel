@@ -27,6 +27,10 @@ package mendel.dht;
 
 import mendel.config.NetworkConfig;
 import mendel.config.SystemConfig;
+import mendel.dht.hash.HashException;
+import mendel.dht.hash.HashTopologyException;
+import mendel.dht.partition.PartitionerException;
+import mendel.dht.partition.SHA1Partitioner;
 import mendel.event.EventException;
 import mendel.event.EventMap;
 import mendel.event.EventReactor;
@@ -52,6 +56,7 @@ public class StorageNode implements Node {
     private int port;
     private String sessionId;
     private String rootDir;
+    private SHA1Partitioner partitioner;
     private File pidFile;
 
     private ClientConnectionPool connectionPool;
@@ -89,7 +94,8 @@ public class StorageNode implements Node {
      * will the StorageNode begin accepting connections.
      */
     @Override
-    public void init() throws IOException, EventException, InterruptedException, SerializationException {
+    public void init() throws IOException, EventException,
+            InterruptedException, SerializationException, HashException, HashTopologyException, PartitionerException {
         Version.printSplash();
 
         /*
@@ -113,6 +119,7 @@ public class StorageNode implements Node {
         /* Pre-scheduler setup tasks */
         connectionPool = new ClientConnectionPool();
         connectionPool.addListener(eventReactor);
+        partitioner = new SHA1Partitioner(this, network);
 
         /* Start listening for incoming messages. */
         messageRouter = new ServerMessageRouter();
