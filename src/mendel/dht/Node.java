@@ -25,8 +25,13 @@
 
 package mendel.dht;
 
+import mendel.event.EventException;
+import mendel.serialize.SerializationException;
+
+import java.io.IOException;
+
 public interface Node {
 
-    public void init();
+    public void init() throws IOException, EventException, InterruptedException, SerializationException;
 
 }
