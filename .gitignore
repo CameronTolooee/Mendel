@@ -22,4 +22,4 @@ docs/api
 .DS_Store
 
 # Binaries
-lib/Mendel-[0-9].[0-9].jar
+lib/Mendel-?.?.jar
