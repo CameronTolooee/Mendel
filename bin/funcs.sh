@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 ################################################################################
 # funcs.sh - contains functionality used by Mendel shell scripts.
-# Stolen from Matthew Malensek
+#   Author: Matthew Malensek
+# Modified: Cameron Tolooee
 ################################################################################
 
 # Colorizes text and echoes it to the terminal.

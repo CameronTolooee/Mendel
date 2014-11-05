@@ -2,7 +2,9 @@
 
 ################################################################################
 # mendel-node - manages the execution of a Mendel Storage Node.
-# Stolen from Matthew Malensek
+#
+#   Author: Matthew Malensek
+# Modified: Cameron Tolooee
 ################################################################################
 
 unset restart statuspath status stop use_color
@@ -11,6 +13,7 @@ signal="SIGTERM"
 class="mendel.dht.StorageNode"
 logfile="storage-node.log"
 pidfile="storage-node.pid"
+propfile="$(dirname $BASH_SOURCE)/../conf/config.properties"
 
 print_usage() {
 cat <<EOM
@@ -84,8 +87,11 @@ if [[ ${?} -eq 0 ]]; then
 
     exit 0
 fi
-java -classpath ../lib/\* -D"pidFile=${pidpath}" \
-    -Dconfig.properties="../conf/config.properties" \
+
+script_dir="$( cd "$(dirname "$0")" ; pwd)"
+
+java -classpath "${script_dir}"/../lib/\* -D"pidFile=${pidpath}" \
+    -Dconfig.properties="${propfile}" \
     ${class} &> "${logpath}" &
 
 (echo "${!}") 2> /dev/null > "${pidpath}"
