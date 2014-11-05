@@ -28,12 +28,12 @@ package mendel.network;
 import java.nio.channels.SelectionKey;
 
 /**
- * The unit of data transmission in the Galileo DHT.  These packets are simple
+ * The unit of data transmission in the Mendel DHT.  These packets are simple
  * in structure, containing a size prefix followed by the packet payload.
  *
  * @author malensek
  */
-public class GalileoMessage {
+public class MendelMessage {
 
     private byte[] payload;
 
@@ -41,44 +41,44 @@ public class GalileoMessage {
     private SelectionKey key;
 
     /**
-     * Constructs a GalileoMessage from an array of bytes.
+     * Constructs a MendelMessage from an array of bytes.
      *
      * @param payload message payload in the form of a byte array.
      */
-    public GalileoMessage(byte[] payload) {
+    public MendelMessage(byte[] payload) {
         this.payload = payload;
     }
 
     /**
-     * Constructs a GalileoMessage from an array of bytes with an associated
+     * Constructs a MendelMessage from an array of bytes with an associated
      * {@link java.nio.channels.SelectionKey} of the message source.
      *
      * @param payload message payload in the form of a byte array.
      * @param key SelectionKey of the message source.
      */
     @Deprecated
-    public GalileoMessage(byte[] payload, SelectionKey key) {
+    public MendelMessage(byte[] payload, SelectionKey key) {
         this(payload);
         this.key = key;
     }
 
     /**
-     * Constructs a GalileoMessage from an array of bytes with an associated
+     * Constructs a MendelMessage from an array of bytes with an associated
      * {@link MessageContext} representing the source of the message.
      *
      * @param payload message payload in the form of a byte array.
      * @param context context information for this message
      */
-    public GalileoMessage(byte[] payload, MessageContext context) {
+    public MendelMessage(byte[] payload, MessageContext context) {
         this(payload);
         this.context = context;
         this.key = context.getSelectionKey();
     }
 
     /**
-     * Retrieves the payload for this GalileoMessage.
+     * Retrieves the payload for this MendelMessage.
      *
-     * @return the GalileoMessage payload
+     * @return the MendelMessage payload
      */
     public byte[] getPayload() {
         return payload;

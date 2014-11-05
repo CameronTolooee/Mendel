@@ -30,4 +30,4 @@
  * @author ctolooee
  * 
  */
-package mendel.parse;
+package mendel.data.parse;
