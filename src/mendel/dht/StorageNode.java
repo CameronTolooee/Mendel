@@ -31,13 +31,8 @@ import mendel.dht.hash.HashException;
 import mendel.dht.hash.HashTopologyException;
 import mendel.dht.partition.PartitionerException;
 import mendel.dht.partition.SHA1Partitioner;
-import mendel.event.EventException;
-import mendel.event.EventMap;
-import mendel.event.EventReactor;
-import mendel.network.ClientConnectionPool;
-import mendel.network.HostIdentifier;
-import mendel.network.NetworkInfo;
-import mendel.network.ServerMessageRouter;
+import mendel.event.*;
+import mendel.network.*;
 import mendel.serialize.SerializationException;
 import mendel.util.Version;
 
@@ -155,4 +150,10 @@ public class StorageNode implements Node {
             System.out.println("Goodbye!");
         }
     }
+
+    private void sendEvent(NodeInfo node, Event event)
+            throws IOException {
+        connectionPool.sendMessage(node, eventReactor.wrapEvent(event));
+    }
+
 }
