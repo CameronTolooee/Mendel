@@ -27,7 +27,7 @@ package mendel.event;
 
 import java.io.IOException;
 
-import mendel.network.GalileoMessage;
+import mendel.network.MendelMessage;
 import mendel.serialize.SerializationException;
 import mendel.serialize.Serializer;
 
@@ -40,7 +40,7 @@ import mendel.serialize.Serializer;
 public class SynopsisWrapper implements EventWrapper {
 
     @Override
-    public GalileoMessage wrap(Event e)
+    public MendelMessage wrap(Event e)
     throws IOException {
         if (e instanceof EventWithSynopsis == false) {
             throw new IOException("This wrapper can only handle "
@@ -48,11 +48,11 @@ public class SynopsisWrapper implements EventWrapper {
         }
 
         byte[] rawMessage = Serializer.serialize(e);
-        return new GalileoMessage(rawMessage);
+        return new MendelMessage(rawMessage);
     }
 
     @Override
-    public Event unwrap(GalileoMessage msg)
+    public Event unwrap(MendelMessage msg)
     throws IOException, SerializationException {
 
         EventWithSynopsis event = Serializer.deserialize(

@@ -61,8 +61,7 @@ public class ParallelMessageRouter {
     }
 
     public void sendMessage(NetworkDestination destination,
-            GalileoMessage message)
-    throws IOException {
+                            MendelMessage message) throws IOException {
         clientRouter.sendMessage(destination, message);
     }
 

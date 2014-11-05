@@ -26,7 +26,7 @@ software, even if advised of the possibility of such damage.
 package mendel.network;
 
 /**
- * Interface for classes that will listen for incoming {@link mendel.network.GalileoMessage}
+ * Interface for classes that will listen for incoming {@link mendel.network.MendelMessage}
  * instances produced by a {@link MessageRouter}.
  *
  * @author malensek
@@ -45,10 +45,10 @@ public interface MessageListener {
      * full, then it may be appropriate to block here (thus blocking the
      * Selector thread) to slow the rate of incoming messages from the network.
      *
-     * @param message GalileoMessage that was received; null if the connection
+     * @param message MendelMessage that was received; null if the connection
      * has been terminated.
      */
-    public void onMessage(GalileoMessage message);
+    public void onMessage(MendelMessage message);
 
     /**
      * Called when a connection is established with a remote endpoint.

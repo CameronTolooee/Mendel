@@ -39,7 +39,8 @@ import mendel.serialize.SerializationOutputStream;
 public class NodeInfo implements ByteSerializable {
 
     private String hostname;
-    private int port; 
+
+    private int port;
     
     public NodeInfo(String hostname, int port) {
         this.hostname = hostname;
@@ -63,5 +64,13 @@ public class NodeInfo implements ByteSerializable {
     @Override
     public String toString(){
         return hostname+":"+port;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public int getPort() {
+        return port;
     }
 }

@@ -141,7 +141,7 @@ public class ClientMessageRouter extends MessageRouter {
      * Sends a message to multiple network destinations.
      */
     public List<Transmission> broadcastMessage(
-            Iterable<NetworkDestination> destinations, GalileoMessage message)
+            Iterable<NetworkDestination> destinations, MendelMessage message)
             throws IOException {
         List<Transmission> transmissions = new ArrayList<>();
         for (NetworkDestination destination : destinations) {
@@ -156,7 +156,7 @@ public class ClientMessageRouter extends MessageRouter {
      * completed during the first send operation.
      */
     public Transmission sendMessage(NetworkDestination destination,
-                                    GalileoMessage message)
+                                    MendelMessage message)
             throws IOException {
 
         /* Make sure this destination has been connected.  If not, this kicks
@@ -181,6 +181,18 @@ public class ClientMessageRouter extends MessageRouter {
 
         selector.wakeup();
         return trans;
+    }
+
+    /**
+     * Sends a message to the specified node.  Connections are
+     * completed during the first send operation.
+     */
+    public Transmission sendMessage(NodeInfo destination,
+                                    MendelMessage message) throws IOException {
+
+        NetworkDestination dest = new NetworkDestination(destination
+                .getHostname(), destination.getPort());
+        return sendMessage(dest,message);
     }
 
     @Override

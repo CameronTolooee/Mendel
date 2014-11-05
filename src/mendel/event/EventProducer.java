@@ -28,7 +28,7 @@ package mendel.event;
 import java.io.IOException;
 
 import mendel.network.ClientMessageRouter;
-import mendel.network.GalileoMessage;
+import mendel.network.MendelMessage;
 import mendel.network.NetworkDestination;
 
 /**
@@ -55,7 +55,7 @@ public class EventProducer {
      */
     public void publishEvent(NetworkDestination destination, Event e)
     throws IOException {
-        GalileoMessage m = reactor.wrapEvent(e);
+        MendelMessage m = reactor.wrapEvent(e);
         router.sendMessage(destination, m);
     }
 }

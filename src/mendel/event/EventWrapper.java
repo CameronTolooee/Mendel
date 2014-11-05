@@ -27,7 +27,7 @@ package mendel.event;
 
 import java.io.IOException;
 
-import mendel.network.GalileoMessage;
+import mendel.network.MendelMessage;
 import mendel.serialize.SerializationException;
 
 /**
@@ -39,17 +39,17 @@ import mendel.serialize.SerializationException;
 public interface EventWrapper {
 
     /**
-     * Wraps an {@link Event} up in a {@link GalileoMessage}, ready to be
+     * Wraps an {@link Event} up in a {@link MendelMessage}, ready to be
      * transmitted across the network.
      */
-    public GalileoMessage wrap(Event e)
+    public MendelMessage wrap(Event e)
         throws IOException;
 
     /**
-     * Unwraps a {@link GalileoMessage} to extract the {@link Event} it
+     * Unwraps a {@link MendelMessage} to extract the {@link Event} it
      * contains.
      */
-    public Event unwrap(GalileoMessage msg)
+    public Event unwrap(MendelMessage msg)
         throws IOException, SerializationException;
 
 }

@@ -31,7 +31,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * Contains connection-specific information about the source of a
- * {@link mendel.network.GalileoMessage}.
+ * {@link mendel.network.MendelMessage}.
  *
  * @author malensek
  */
@@ -84,7 +84,7 @@ public class MessageContext {
      * Sends a message back to the originator of the message this context
      * belongs to.
      */
-    public void sendMessage(GalileoMessage message)
+    public void sendMessage(MendelMessage message)
     throws IOException {
         router.sendMessage(this.key, message);
     }

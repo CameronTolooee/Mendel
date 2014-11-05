@@ -47,7 +47,7 @@ public class ClientConnectionPool extends ClientMessageRouter {
 
     @Override
     public Transmission sendMessage(NetworkDestination destination,
-            GalileoMessage message)
+            MendelMessage message)
     throws IOException {
         Transmission trans = super.sendMessage(destination, message);
         connectionAge.put(destination, System.nanoTime());

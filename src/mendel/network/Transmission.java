@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 /**
- * Represents the transmission of one unit of data ({@link GalileoMessage}).
+ * Represents the transmission of one unit of data ({@link MendelMessage}).
  * Apart from managing the data associated with a network transmission, this
  * class also acts like a Future: the finish() method will cause the calling
  * thread to block until the transmission has been completed (either

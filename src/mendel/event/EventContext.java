@@ -27,7 +27,7 @@ package mendel.event;
 
 import java.io.IOException;
 
-import mendel.network.GalileoMessage;
+import mendel.network.MendelMessage;
 import mendel.network.NetworkDestination;
 
 /**
@@ -38,10 +38,10 @@ import mendel.network.NetworkDestination;
  */
 public class EventContext {
 
-    private GalileoMessage message;
+    private MendelMessage message;
     private EventWrapper wrapper;
 
-    public EventContext(GalileoMessage message, EventWrapper wrapper) {
+    public EventContext(MendelMessage message, EventWrapper wrapper) {
         this.message = message;
         this.wrapper = wrapper;
     }
@@ -51,7 +51,7 @@ public class EventContext {
      */
     public void sendReply(Event e)
     throws IOException {
-        GalileoMessage m = wrapper.wrap(e);
+        MendelMessage m = wrapper.wrap(e);
         this.message.getContext().sendMessage(m);
     }
 

@@ -38,20 +38,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import mendel.network.GalileoMessage;
+import mendel.network.MendelMessage;
 import mendel.network.MessageListener;
 import mendel.network.NetworkDestination;
 import mendel.serialize.SerializationException;
 
 /**
  * Implements the reactor pattern for processing incoming events
- * ({@link GalileoMessage} instances).
+ * ({@link MendelMessage} instances).
  *
  * @author malensek
  */
 public class EventReactor implements MessageListener {
 
-    private static final Logger logger = Logger.getLogger("galileo");
+    private static final Logger logger = Logger.getLogger("mendel");
 
     private static final int DEFAULT_QUEUE_SZ = 100000;
 
@@ -62,7 +62,7 @@ public class EventReactor implements MessageListener {
 
     private Map<Class<?>, Method> classToMethod = new HashMap<>();
 
-    private BlockingQueue<GalileoMessage> messageQueue
+    private BlockingQueue<MendelMessage> messageQueue
         = new LinkedBlockingQueue<>();
 
     /**
@@ -181,7 +181,7 @@ public class EventReactor implements MessageListener {
     public void processNextEvent() throws EventException, IOException,
             InterruptedException, SerializationException {
 
-        GalileoMessage message = messageQueue.take();
+        MendelMessage message = messageQueue.take();
 
         try {
             Event event = eventWrapper.unwrap(message);
@@ -213,7 +213,7 @@ public class EventReactor implements MessageListener {
     }
 
     @Override
-    public void onMessage(GalileoMessage message) {
+    public void onMessage(MendelMessage message) {
         try {
             messageQueue.put(message);
         } catch (InterruptedException e) {
@@ -226,7 +226,7 @@ public class EventReactor implements MessageListener {
      * Convenience function for wrapping an outgoing event with this
      * EventReactor's {@link EventWrapper} implementation.
      */
-    public GalileoMessage wrapEvent(Event e)
+    public MendelMessage wrapEvent(Event e)
     throws IOException {
         return eventWrapper.wrap(e);
     }

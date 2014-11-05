@@ -51,19 +51,6 @@ public class MendelMessage {
 
     /**
      * Constructs a MendelMessage from an array of bytes with an associated
-     * {@link java.nio.channels.SelectionKey} of the message source.
-     *
-     * @param payload message payload in the form of a byte array.
-     * @param key SelectionKey of the message source.
-     */
-    @Deprecated
-    public MendelMessage(byte[] payload, SelectionKey key) {
-        this(payload);
-        this.key = key;
-    }
-
-    /**
-     * Constructs a MendelMessage from an array of bytes with an associated
      * {@link MessageContext} representing the source of the message.
      *
      * @param payload message payload in the form of a byte array.
@@ -86,10 +73,5 @@ public class MendelMessage {
 
     public MessageContext getContext() {
         return context;
-    }
-
-    @Deprecated
-    public SelectionKey getSelectionKey() {
-        return key;
     }
 }

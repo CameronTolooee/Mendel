@@ -50,29 +50,41 @@ import java.util.logging.Logger;
  */
 public abstract class MessageRouter implements Runnable {
 
-    protected static final Logger logger = Logger.getLogger("galileo");
+    protected static final Logger logger = Logger.getLogger("mendel");
 
-    /** The size (in bytes) of the message prefix used in the system. */
+    /**
+     * The size (in bytes) of the message prefix used in the system.
+     */
     public static final int PREFIX_SZ = Integer.SIZE / Byte.SIZE;
 
-    /** The default read buffer size is 8 MB. */
+    /**
+     * The default read buffer size is 8 MB.
+     */
     public static final int DEFAULT_READ_BUFFER_SIZE = 8388608;
 
-    /** The default write queue allows 100 items to be inserted before it
+    /**
+     * The default write queue allows 100 items to be inserted before it
      * starts blocking.  This prevents situations where the MessageRouter is
      * overwhelmed by an extreme number of write requests, exhausting available
-     * resources. */
+     * resources.
+     */
     public static final int DEFAULT_WRITE_QUEUE_SIZE = 100;
 
-    /** System property that overrides the read buffer size. */
+    /**
+     * System property that overrides the read buffer size.
+     */
     public static final String READ_BUFFER_PROPERTY
-        = "galileo.net.MessageRouter.readBufferSize";
+            = "mendel.network.MessageRouter.readBufferSize";
 
-    /** System property that overrides the write queue maximum size. */
+    /**
+     * System property that overrides the write queue maximum size.
+     */
     public static final String WRITE_QUEUE_PROPERTY
-        = "galileo.net.MessageRouter.writeQueueSize";
+            = "mendel.network.MessageRouter.writeQueueSize";
 
-    /** Flag used to determine whether the Selector thread should run */
+    /**
+     * Flag used to determine whether the Selector thread should run
+     */
     protected boolean online;
 
     private List<MessageListener> listeners = new ArrayList<>();
@@ -84,7 +96,7 @@ public abstract class MessageRouter implements Runnable {
     private ByteBuffer readBuffer;
 
     protected ConcurrentHashMap<SelectionKey, Integer> changeInterest
-        = new ConcurrentHashMap<>();
+            = new ConcurrentHashMap<>();
 
     public MessageRouter() {
         this(DEFAULT_READ_BUFFER_SIZE, DEFAULT_WRITE_QUEUE_SIZE);
@@ -150,7 +162,7 @@ public abstract class MessageRouter implements Runnable {
      * SelectionKey set based on interest ops.
      */
     protected void processSelectionKeys()
-    throws IOException {
+            throws IOException {
 
         selector.select();
 
@@ -196,7 +208,7 @@ public abstract class MessageRouter implements Runnable {
      * @param key The SelectionKey for the connecting client.
      */
     protected void accept(SelectionKey key)
-    throws IOException {
+            throws IOException {
         ServerSocketChannel servSocket = (ServerSocketChannel) key.channel();
         SocketChannel channel = servSocket.accept();
         logger.info("Accepted connection: " + getClientString(channel));
@@ -272,7 +284,7 @@ public abstract class MessageRouter implements Runnable {
     /**
      * Process data received from a client SocketChannel.  This method is
      * chiefly concerned with processing incoming data streams into
-     * GalileoMessage packets to be consumed by the system.
+     * MendelMessage packets to be consumed by the system.
      *
      * @param key SelectionKey for the client.
      */
@@ -301,7 +313,7 @@ public abstract class MessageRouter implements Runnable {
 
         if (transmission.readPointer == transmission.expectedBytes) {
             /* The payload has been read */
-            GalileoMessage msg = new GalileoMessage(
+            MendelMessage msg = new MendelMessage(
                     transmission.payload,
                     new MessageContext(this, key));
             dispatchMessage(msg);
@@ -318,13 +330,13 @@ public abstract class MessageRouter implements Runnable {
 
     /**
      * Read the payload size prefix from a channel.
-     * Each message in Galileo is prefixed with a payload size field; this is
+     * Each message in Mendel is prefixed with a payload size field; this is
      * read to allocate buffers for the incoming message.
      *
      * @return true if the payload size has been determined; false otherwise.
      */
     protected static boolean readPrefix(ByteBuffer buffer,
-            TransmissionTracker transmission) {
+                                        TransmissionTracker transmission) {
         /* Make sure the prefix hasn't already been read. */
         if (transmission.expectedBytes != 0) {
             return true;
@@ -366,7 +378,7 @@ public abstract class MessageRouter implements Runnable {
      * prefix.  Data produced by this method will be subsequently read by the
      * readPrefix() method.
      */
-    protected static ByteBuffer wrapWithPrefix(GalileoMessage message) {
+    protected static ByteBuffer wrapWithPrefix(MendelMessage message) {
         int messageSize = message.getPayload().length;
         ByteBuffer buffer = ByteBuffer.allocate(messageSize + 4);
         buffer.putInt(messageSize);
@@ -380,17 +392,16 @@ public abstract class MessageRouter implements Runnable {
      * and submits a change request for its interest set. Pending data is placed
      * in a blocking queue, so this function may block to prevent queueing an
      * excessive amount of data.
-     * <p>
-     * The system property <em>galileo.net.MessageRouter.writeQueueSize</em>
+     * <p/>
+     * The system property <em>mendel.net.MessageRouter.writeQueueSize</em>
      * tunes the maximum amount of data that can be queued.
      *
-     * @param key SelectionKey for the channel.
-     * @param message GalileoMessage to publish on the channel.
-     *
+     * @param key     SelectionKey for the channel.
+     * @param message MendelMessage to publish on the channel.
      * @return {@link mendel.network.Transmission} instance representing the send operation.
      */
-    public Transmission sendMessage(SelectionKey key, GalileoMessage message)
-    throws IOException {
+    public Transmission sendMessage(SelectionKey key, MendelMessage message)
+            throws IOException {
         //TODO reduce the visibility of this method to protected
         if (this.isOnline() == false) {
             throw new IOException("MessageRouter is not online.");
@@ -485,7 +496,7 @@ public abstract class MessageRouter implements Runnable {
      * receive messages that are published by this MessageRouter.
      *
      * @param listener {@link mendel.network.MessageListener} that will consume messages
-     * published by this MessageRouter.
+     *                 published by this MessageRouter.
      */
     public void addListener(MessageListener listener) {
         listeners.add(listener);
@@ -494,9 +505,9 @@ public abstract class MessageRouter implements Runnable {
     /**
      * Dispatches a message to all listening consumers.
      *
-     * @param message {@link mendel.network.GalileoMessage} to dispatch.
+     * @param message {@link mendel.network.MendelMessage} to dispatch.
      */
-    protected void dispatchMessage(GalileoMessage message) {
+    protected void dispatchMessage(MendelMessage message) {
         for (MessageListener listener : listeners) {
             listener.onMessage(message);
         }
@@ -548,7 +559,6 @@ public abstract class MessageRouter implements Runnable {
      * encapsulates them in a {@link mendel.network.NetworkDestination}.
      *
      * @param channel The SocketChannel of the network endpoint.
-     *
      * @return NetworkDestination representation of the endpoint.
      */
     protected static NetworkDestination getDestination(SocketChannel channel) {
