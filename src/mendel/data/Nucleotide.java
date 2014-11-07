@@ -1,15 +1,15 @@
 /*
  * Copyright (c) 2014, Colorado State University All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer. 2. Redistributions in
  * binary form must reproduce the above copyright notice, this list of
  * conditions and the following disclaimer in the documentation and/or other
  * materials provided with the distribution.
- * 
+ *
  * This software is provided by the copyright holders and contributors "as is"
  * and any express or implied warranties, including, but not limited to, the
  * implied warranties of merchantability and fitness for a particular purpose
@@ -23,32 +23,14 @@
  * possibility of such damage.
  */
 
-/**
- *
- *
- * @author ctolooee
- */
 package mendel.data;
 
-import mendel.serialize.ByteSerializable;
-import mendel.serialize.SerializationInputStream;
-import mendel.serialize.SerializationOutputStream;
+public enum Nucleotide {
+    A(0x0), C(0x1), T(0x2), G(0x3), N(0x4);
 
-import java.io.IOException;
+    int mask;
 
-public class Metadata implements ByteSerializable {
-
-    //TODO Add to this as we figure it out what formats we have for meta
-    DNASequence seqBlock;
-
-    public Metadata() {}
-
-    public Metadata(SerializationInputStream in){
-
-    }
-
-    @Override
-    public void serialize(SerializationOutputStream out) throws IOException {
-
+    Nucleotide(int mask) {
+        this.mask = mask;
     }
 }
