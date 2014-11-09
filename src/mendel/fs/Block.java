@@ -40,7 +40,7 @@ public class Block implements ByteSerializable {
     private byte[] data;
 
     public Block(byte[] data) {
-        this.metadata = new Metadata();
+        this.metadata = new Metadata(name);
         this.data = data;
     }
 

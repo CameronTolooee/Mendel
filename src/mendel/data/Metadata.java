@@ -39,9 +39,12 @@ import java.io.IOException;
 public class Metadata implements ByteSerializable {
 
     //TODO Add to this as we figure it out what formats we have for meta
-    DNASequence seqBlock;
+    private DNASequence seqBlock;
+    private String name;
 
-    public Metadata() {}
+    public Metadata(String name) {
+        this.name = name;
+    }
 
     public Metadata(SerializationInputStream in){
 
@@ -50,5 +53,9 @@ public class Metadata implements ByteSerializable {
     @Override
     public void serialize(SerializationOutputStream out) throws IOException {
 
+    }
+
+    public String getName() {
+        return name;
     }
 }

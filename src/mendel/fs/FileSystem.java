@@ -37,6 +37,8 @@ import java.io.IOException;
  */
 public interface FileSystem {
 
+    public static final String BLOCK_EXTENSION = ".blk";
+
     /**
      * Retrieves a {@link Block} instance, given its path on disk.
      *
