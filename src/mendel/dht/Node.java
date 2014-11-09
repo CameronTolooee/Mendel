@@ -29,12 +29,13 @@ import mendel.dht.hash.HashException;
 import mendel.dht.hash.HashTopologyException;
 import mendel.dht.partition.PartitionerException;
 import mendel.event.EventException;
+import mendel.fs.FileSystemException;
 import mendel.serialize.SerializationException;
 
 import java.io.IOException;
 
 public interface Node {
 
-    public void init() throws IOException, EventException, InterruptedException, SerializationException, HashException, HashTopologyException, PartitionerException;
+    public void init() throws IOException, EventException, InterruptedException, SerializationException, HashException, HashTopologyException, PartitionerException, FileSystemException;
 
 }
