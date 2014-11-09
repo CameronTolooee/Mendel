@@ -32,6 +32,8 @@ import mendel.dht.hash.HashTopologyException;
 import mendel.dht.partition.PartitionerException;
 import mendel.dht.partition.SHA1Partitioner;
 import mendel.event.*;
+import mendel.fs.FileSystemException;
+import mendel.fs.MendelFileSystem;
 import mendel.network.*;
 import mendel.serialize.SerializationException;
 import mendel.util.Version;
@@ -57,6 +59,7 @@ public class StorageNode implements Node {
     private ClientConnectionPool connectionPool;
     private EventMap eventMap = new EventMap();
     private EventReactor eventReactor = new EventReactor(this, eventMap);
+    private MendelFileSystem fileSystem;
 
     public StorageNode() {
         this.port = NetworkConfig.DEFAULT_PORT;
@@ -90,7 +93,9 @@ public class StorageNode implements Node {
      */
     @Override
     public void init() throws IOException, EventException,
-            InterruptedException, SerializationException, HashException, HashTopologyException, PartitionerException {
+            InterruptedException, SerializationException,
+            HashException, HashTopologyException,
+            PartitionerException, FileSystemException {
         Version.printSplash();
 
         /*
@@ -110,6 +115,8 @@ public class StorageNode implements Node {
         /* Set up our Shutdown hook */
         Runtime.getRuntime().addShutdownHook(new ShutdownHandler());
 
+        /* Set up file system */
+        fileSystem = new MendelFileSystem(SystemConfig.getRootDir());
 
         /* Pre-scheduler setup tasks */
         connectionPool = new ClientConnectionPool();
