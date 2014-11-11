@@ -26,11 +26,10 @@
 package mendel.test;
 
 /**
- * 
- * @author Cameron Tolooee
- * A client for testing various functionality throughout the project. This note 
- * is primarily for testing out JavaDocs!
+ * A client for testing various functionality throughout the project. This note
+ * is for testing out JavaDocs!
  *
+ * @author ctolooee
  */
 public class TestClient {
 
