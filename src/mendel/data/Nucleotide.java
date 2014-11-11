@@ -25,12 +25,25 @@
 
 package mendel.data;
 
-public enum Nucleotide {
-    A(0x0), C(0x1), T(0x2), G(0x3), N(0x4);
+    public class Nucleotide {
 
-    int mask;
+        /**
+         * Encoding Nucleotide characters:
+         * A = 00000000
+         * C = 00000001
+         * G = 00000010
+         * N = 00000011
+         * T = 00000100
+         *
+         * Use this to bitwise OR individual nucleotides into a single byte.
+         */
+        public static final byte[] charMap = new byte[]{0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,(byte)1,
+                0,0,0,(byte)2,0,0,0,0,0,0,(byte)3,0,0,0,0,0,(byte)4};
 
-    Nucleotide(int mask) {
-        this.mask = mask;
+        public static final char[] reverseCharMap = new char[]{'A','C','G','N','T'};
+
+        public static final char[] reverseComplementCharMap = new char[]{'T','G','C','N','A'};
+
     }
-}
