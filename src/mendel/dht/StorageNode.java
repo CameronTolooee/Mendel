@@ -31,7 +31,10 @@ import mendel.dht.hash.HashException;
 import mendel.dht.hash.HashTopologyException;
 import mendel.dht.partition.PartitionerException;
 import mendel.dht.partition.SHA1Partitioner;
-import mendel.event.*;
+import mendel.event.Event;
+import mendel.event.EventException;
+import mendel.event.EventMap;
+import mendel.event.EventReactor;
 import mendel.fs.FileSystemException;
 import mendel.fs.MendelFileSystem;
 import mendel.network.*;
@@ -110,12 +113,11 @@ public class StorageNode implements Node {
                     e);
             return;
         }
-        System.out.println(network);
 
-        /* Set up our Shutdown hook */
+        /* Setup our Shutdown hook */
         Runtime.getRuntime().addShutdownHook(new ShutdownHandler());
 
-        /* Set up file system */
+        /* Setup file system */
         fileSystem = new MendelFileSystem(SystemConfig.getRootDir());
 
         /* Pre-scheduler setup tasks */
