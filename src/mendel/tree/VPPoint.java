@@ -30,10 +30,8 @@ package mendel.tree;
  * distance function that satisfies metric space. The implementation of the
  * distance function can be tested with the {@link #verifyMetricSpace()} method.
  *
- * @param <T> Data type to be stored in the point. The distance function
- *           determines the distance between two values of this type.
  */
-public interface VPPoint<T> {
-    public abstract int distance(VPPoint<T> other);
+public interface VPPoint extends Comparable<VPPoint> {
+    public int distance(VPPoint other);
     public boolean verifyMetricSpace();
 }

@@ -35,12 +35,12 @@ import java.util.Random;
  *
  * @author ctolooee
  */
-public final class VPTree<T extends VPPoint<T>> {
+public final class VPTree {
     private VPNode root;
-    private final List<T> points;
+    private final List<VPPoint> points;
     private double tau;
 
-    public VPTree(List<T> points) {
+    public VPTree(List<VPPoint> points) {
         this.points = points;
     }
 
@@ -48,31 +48,18 @@ public final class VPTree<T extends VPPoint<T>> {
         root = buildFromPoints(0, points.size());
     }
 
-    public void search(T target, int k, List<T> results, List<Integer> distances) {
-        PriorityQueue<HeapItem> heap = new PriorityQueue<>();
-
-        long tau = Long.MAX_VALUE;
-
-        search(root, target, k, heap);
-
-        results.clear();
-        distances.clear();
-
-        while (!heap.isEmpty()) {
-            results.add(points.get(heap.peek().index));
-            distances.add(heap.poll().distance);
-            heap.poll();
-        }
-    }
-
     private VPNode buildFromPoints(int lower, int upper) {
+        if (upper == lower) {
+            return null;
+        }
+
         VPNode node = new VPNode(lower);
 
         if (upper - lower > 1) {
             Random rand = new Random();
 
             // choose an arbitrary point and move it to the start
-            int i = rand.nextInt(upper);
+            int i = rand.nextInt(upper - 1);
             Collections.swap(points, lower, i);
 
             int median = (upper + lower) / 2;
@@ -90,7 +77,26 @@ public final class VPTree<T extends VPPoint<T>> {
         return node;
     }
 
-    private void search(VPNode node, T target, int k,
+    public void search(VPPoint target, int k, List<VPPoint> results, List<Integer> distances) {
+        PriorityQueue<HeapItem> heap = new PriorityQueue<>();
+
+        tau = Long.MAX_VALUE;
+
+        search(root, target, k, heap);
+
+        results.clear();
+        distances.clear();
+
+        while (!heap.isEmpty()) {
+            results.add(points.get(heap.peek().index));
+            distances.add(heap.peek().distance);
+            heap.poll();
+        }
+//        Collections.reverse(results);
+//        Collections.reverse(distances);
+    }
+
+    private void search(VPNode node, VPPoint target, int k,
                         PriorityQueue<HeapItem> heap) {
         if (node == null) {
             return;
@@ -128,15 +134,17 @@ public final class VPTree<T extends VPPoint<T>> {
         }
     }
 
-    private int nth_element(int lower, int median, int upper, VPPoint<T> vp) {
+    private int nth_element(int lower, int median, int upper, VPPoint vp) {
         int medianDist = points.get(median).distance(vp);
         while (lower <= upper) {
-            while (points.get(lower).distance(vp) < medianDist)
+            while (points.get(lower).distance(vp) < medianDist) {
                 lower++;
-            while (points.get(lower).distance(vp) > medianDist)
+            }
+            while (points.get(upper - 1).distance(vp) > medianDist) {
                 upper--;
+            }
             if (lower <= upper) {
-                Collections.swap(points, lower, upper);
+                Collections.swap(points, lower, upper - 1);
                 lower++;
                 upper--;
             }
@@ -154,7 +162,7 @@ public final class VPTree<T extends VPPoint<T>> {
 
         @Override
         public int compareTo(HeapItem o) {
-            return distance - o.distance;
+            return o.distance - distance;
         }
     }
 }

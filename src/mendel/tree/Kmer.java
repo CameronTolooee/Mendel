@@ -31,7 +31,7 @@ package mendel.tree;
  *
  * @author ctolooee
  */
-public class Kmer implements Comparable<Kmer>,VPPoint<String> {
+public class Kmer implements VPPoint {
 
     public String word;
 
@@ -48,9 +48,8 @@ public class Kmer implements Comparable<Kmer>,VPPoint<String> {
      * @param other the other {@link mendel.tree.Kmer} to compare the Hamming
      *              distance to.
      */
-    public int distance(VPPoint<String> other) {
+    public int distance(VPPoint other) {
         String word2;
-
         /* Validate arguments */
         if (other instanceof Kmer) {
             word2 = ((Kmer) other).word;
@@ -64,13 +63,12 @@ public class Kmer implements Comparable<Kmer>,VPPoint<String> {
 
         char[] c1 = word.toCharArray();
         char[] c2 = word2.toCharArray();
-        int count =0, len = word.length();
+        int len = word.length(), count = len;
 
         for (int i = 0; i < len; i++) {
-
             /* Wildcard character 'N' always counts as a match */
             if (c1[i] == 'N' || c2[i] == 'N' || c1[i] == c2[i]) {
-                ++count;
+                --count;
             }
         }
         return count;
@@ -83,8 +81,16 @@ public class Kmer implements Comparable<Kmer>,VPPoint<String> {
     }
 
     @Override
-    public int compareTo(Kmer other) {
-        return word.compareTo(other.word);
+    public int compareTo(VPPoint other) {
+        String word2;
+
+        /* Validate arguments */
+        if (other instanceof Kmer) {
+            word2 = ((Kmer) other).word;
+        } else {
+            throw new IllegalArgumentException();
+        }
+        return word.compareTo(word2);
     }
 
     @Override
@@ -94,13 +100,19 @@ public class Kmer implements Comparable<Kmer>,VPPoint<String> {
 
         Kmer kmer = (Kmer) o;
 
-        if (!word.equals(kmer.word)) return false;
+        return word.equals(kmer.word);
 
-        return true;
     }
 
     @Override
     public int hashCode() {
         return word.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Kmer{" +
+                "word='" + word + '\'' +
+                '}';
     }
 }
