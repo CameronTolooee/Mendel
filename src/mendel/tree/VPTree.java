@@ -77,63 +77,90 @@ public final class VPTree {
         return node;
     }
 
-    public void search(VPPoint target, int k, List<VPPoint> results, List<Integer> distances) {
+    /**
+     * Conducts a nearest neighbor search over the vp-tree with the specified
+     * <code>target</code>. The top <code>k</code> results will be stored in
+     * <code>results</code> and their distances in <code>distances</code>.
+     *
+     * @param target    the query value to search for
+     * @param k         the number of nearest neighbors
+     * @param results   a list the results will be stored in
+     * @param distances a list the distances will be stored in
+     */
+    public void search(VPPoint target, int k, List<VPPoint> results,
+                       List<Integer> distances) {
+
         PriorityQueue<HeapItem> heap = new PriorityQueue<>();
 
-        tau = Long.MAX_VALUE;
+        /* tau tracks distance of the nearest neighbor that's farthest away */
+        tau = Long.MAX_VALUE; // initially infinite
 
         search(root, target, k, heap);
 
-        results.clear();
-        distances.clear();
-
+        /* iterate through the heap and fill out the results/distances */
         while (!heap.isEmpty()) {
             results.add(points.get(heap.peek().index));
             distances.add(heap.peek().distance);
             heap.poll();
         }
-//        Collections.reverse(results);
-//        Collections.reverse(distances);
     }
 
     private void search(VPNode node, VPPoint target, int k,
                         PriorityQueue<HeapItem> heap) {
+        /* null node means nothing to search for */
         if (node == null) {
             return;
         }
+
+        /* Get distance from target */
         int dist = points.get(node.index).distance(target);
 
+        /* If distance less than tau, its a nearest neighbor found, THUS FAR */
         if (dist < tau) {
+            /* Only store top k results */
             if (heap.size() == k) {
                 heap.poll();
             }
             heap.add(new HeapItem(node.index, dist));
+
+            /* If the insertion makes the heap full, tau may have changed */
             if (heap.size() == k) {
                 tau = heap.peek().distance;
             }
         }
 
+        /* We're at a leaf node; Abandon ship! */
         if (node.left == null && node.right == null) {
             return;
         }
+
+        /* Inside the tau; search left */
         if (dist < node.threshold) {
             if (dist - tau <= node.threshold) {
                 search(node.left, target, k, heap);
             }
+            /* Unless there's overlap; search both */
             if (dist + tau >= node.threshold) {
                 search(node.right, target, k, heap);
             }
+        /* Outside the tau; search right */
         } else {
             if (dist + tau >= node.threshold) {
                 search(node.right, target, k, heap);
             }
-
+            /* Unless there's overlap; search both */
             if (dist - tau <= node.threshold) {
                 search(node.left, target, k, heap);
             }
         }
     }
 
+    /**
+     * Primitive implementation of the C++ std::nth_element algorithm. This
+     * method partitions the points list from lower to upper around median such
+     * that the values preceding median are less than it and values following
+     * are greater.
+     */
     private int nth_element(int lower, int median, int upper, VPPoint vp) {
         int medianDist = points.get(median).distance(vp);
         while (lower <= upper) {
@@ -152,6 +179,9 @@ public final class VPTree {
         return lower;
     }
 
+    /**
+     * Quick aggregation class to be used in the PriorityQueue.
+     */
     private class HeapItem implements Comparable<HeapItem> {
         int index, distance;
 
@@ -162,6 +192,11 @@ public final class VPTree {
 
         @Override
         public int compareTo(HeapItem o) {
+            if (o == null) {
+                throw new IllegalArgumentException();
+            }
+            /* Inverted to ensure polling (popping) from the queue removes the
+            value with the largest distance */
             return o.distance - distance;
         }
     }

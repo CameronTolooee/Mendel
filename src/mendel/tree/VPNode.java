@@ -25,6 +25,11 @@
 
 package mendel.tree;
 
+/**
+ * Implementation of a node within a vantage-point tree
+ *
+ * @author ctolooee
+ */
 public class VPNode {
     int index;
     double threshold;
@@ -33,7 +38,7 @@ public class VPNode {
 
     public VPNode(int index) {
         this.index = index;
-        threshold= 0.;
+        threshold = 0.;
         left = right = null;
     }
 }

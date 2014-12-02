@@ -24,7 +24,9 @@
  */
 
 /**
- * Implementation of the Vantage-point tree used for content distribution.
+ * Implementation of the Vantage-point tree used for content distribution. This
+ * implementation was influenced by Steve Hanov on his blog
+ * (http://stevehanov.ca/blog/index.php?id=130)
  *
  * @author ctolooee
  */
