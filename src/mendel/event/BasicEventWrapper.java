@@ -25,8 +25,7 @@ software, even if advised of the possibility of such damage.
 
 package mendel.event;
 
-import mendel.network.GalileoMessage;
-
+import mendel.network.MendelMessage;
 import mendel.serialize.SerializationException;
 import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
@@ -53,7 +52,7 @@ public class BasicEventWrapper implements EventWrapper {
     }
 
     @Override
-    public GalileoMessage wrap(Event e)
+    public MendelMessage wrap(Event e)
     throws IOException {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
         SerializationOutputStream sOut = new SerializationOutputStream(
@@ -65,12 +64,12 @@ public class BasicEventWrapper implements EventWrapper {
         sOut.close();
 
         byte[] payload = bOut.toByteArray();
-        GalileoMessage msg = new GalileoMessage(payload);
+        MendelMessage msg = new MendelMessage(payload);
         return msg;
     }
 
     @Override
-    public Event unwrap(GalileoMessage msg)
+    public Event unwrap(MendelMessage msg)
     throws IOException, SerializationException {
         ByteArrayInputStream byteIn
             = new ByteArrayInputStream(msg.getPayload());
