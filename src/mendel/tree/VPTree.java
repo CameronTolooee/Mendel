@@ -35,10 +35,10 @@ import java.util.Random;
  *
  * @author ctolooee
  */
-public final class VPTree {
-    private VPNode root;
-    private final List<VPPoint> points;
-    private double tau;
+public class VPTree {
+    protected VPNode root;
+    protected final List<VPPoint> points;
+    protected double tau;
 
     public VPTree(List<VPPoint> points) {
         this.points = points;
@@ -48,7 +48,7 @@ public final class VPTree {
         root = buildFromPoints(0, points.size());
     }
 
-    private VPNode buildFromPoints(int lower, int upper) {
+    protected VPNode buildFromPoints(int lower, int upper) {
         if (upper == lower) {
             return null;
         }
@@ -58,16 +58,15 @@ public final class VPTree {
         if (upper - lower > 1) {
             Random rand = new Random();
 
-            // choose an arbitrary point and move it to the start
+            /* Choose a random value as the pivot and move it to the front */
             int i = rand.nextInt(upper - 1);
             Collections.swap(points, lower, i);
 
+            /* Partition around the median distance */
             int median = (upper + lower) / 2;
-
-            // partition around the median distance
             nth_element(lower + 1, median, upper, points.get(lower));
 
-            // what was the median?
+            /* The node's threshold is the median distance of its partition */
             node.threshold = points.get(lower).distance(points.get(median));
 
             node.index = lower;
@@ -97,7 +96,7 @@ public final class VPTree {
 
         search(root, target, k, heap);
 
-        /* iterate through the heap and fill out the results/distances */
+        /* Iterate through the heap and fill out the results/distances */
         while (!heap.isEmpty()) {
             results.add(points.get(heap.peek().index));
             distances.add(heap.peek().distance);
@@ -105,7 +104,7 @@ public final class VPTree {
         }
     }
 
-    private void search(VPNode node, VPPoint target, int k,
+    protected void search(VPNode node, VPPoint target, int k,
                         PriorityQueue<HeapItem> heap) {
         /* null node means nothing to search for */
         if (node == null) {
@@ -161,7 +160,7 @@ public final class VPTree {
      * that the values preceding median are less than it and values following
      * are greater.
      */
-    private int nth_element(int lower, int median, int upper, VPPoint vp) {
+    protected int nth_element(int lower, int median, int upper, VPPoint vp) {
         int medianDist = points.get(median).distance(vp);
         while (lower <= upper) {
             while (points.get(lower).distance(vp) < medianDist) {
@@ -182,7 +181,7 @@ public final class VPTree {
     /**
      * Quick aggregation class to be used in the PriorityQueue.
      */
-    private class HeapItem implements Comparable<HeapItem> {
+    protected class HeapItem implements Comparable<HeapItem> {
         int index, distance;
 
         public HeapItem(int index, int distance) {
