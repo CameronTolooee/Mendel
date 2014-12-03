@@ -28,7 +28,6 @@ package mendel.test;
 import mendel.tree.Kmer;
 import mendel.tree.VPPoint;
 import mendel.tree.VPPrefixTree;
-import mendel.tree.VPTree;
 import mendel.util.Pair;
 
 import java.util.ArrayList;
@@ -44,11 +43,9 @@ public class VPPrefixTreeTest {
         list.add(new Kmer("ACTTCCTGA"));
         list.add(new Kmer("ACTCCCTGA"));
         list.add(new Kmer("AAGGCCTGA"));
-        list.add(new Kmer("ACTGCCTGA"));
         list.add(new Kmer("GGTGCCTGA"));
         list.add(new Kmer("CGTGATGCA"));
         list.add(new Kmer("ACCCCCCCC"));
-        list.add(new Kmer("NNNNNNNNN"));
 
         VPPrefixTree vpTree = new VPPrefixTree(list);
         vpTree.buildTree();
@@ -56,19 +53,29 @@ public class VPPrefixTreeTest {
         Kmer target = new Kmer("GGTGCCTGG"); /* Matches GGTGNCTGA" */
         List<VPPoint> values = new ArrayList<>();
         List<Integer> distances = new ArrayList<>();
+        List<Long> prefixes = new ArrayList<>();
         System.out.println("Searching 'GGTGNCTGG' (matches 'GGTGNCTGA')");
-        vpTree.search(target, 5, values, distances);
+        vpTree.search(target, 5, values, distances, prefixes);
 
         for (int i = values.size() - 1; i >= 0; --i) {
             System.out.print(values.get(i));
             System.out.print(" : " + distances.get(i));
+            System.out.println(" : " + prefixes.get(i));
         }
+
+        System.out.print("Add test: ");
+        System.out.println(vpTree.add(new Kmer("ACCCCCCCC")));
+        System.out.println(vpTree.add(new Kmer("ACCCCCCCC")));
+        System.out.println(vpTree.add(new Kmer("ACCCCCCCC")));
+
+
+
 
         /* Linear search results */
         List<Pair<Kmer, Integer>> linear = new ArrayList<>();
         for (VPPoint kmer : list) {
             int dist = target.distance(kmer);
-            linear.add(new Pair<Kmer, Integer>((Kmer) kmer, dist));
+            linear.add(new Pair<>((Kmer) kmer, dist));
         }
 
         /* Sort results */
