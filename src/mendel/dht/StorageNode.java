@@ -25,16 +25,17 @@
 
 package mendel.dht;
 
+import mendel.comm.QueryEvent;
+import mendel.comm.QueryRequest;
+import mendel.comm.QueryResponse;
 import mendel.config.NetworkConfig;
 import mendel.config.SystemConfig;
 import mendel.dht.hash.HashException;
 import mendel.dht.hash.HashTopologyException;
 import mendel.dht.partition.PartitionerException;
 import mendel.dht.partition.SHA1Partitioner;
-import mendel.event.Event;
-import mendel.event.EventException;
-import mendel.event.EventMap;
-import mendel.event.EventReactor;
+import mendel.event.*;
+import mendel.fs.Block;
 import mendel.fs.FileSystemException;
 import mendel.fs.MendelFileSystem;
 import mendel.network.*;
@@ -43,6 +44,9 @@ import mendel.util.Version;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,6 +67,8 @@ public class StorageNode implements Node {
     private EventMap eventMap = new EventMap();
     private EventReactor eventReactor = new EventReactor(this, eventMap);
     private MendelFileSystem fileSystem;
+    private ConcurrentHashMap<String, QueryTracker> queryTrackers
+            = new ConcurrentHashMap<>();
 
     public StorageNode() {
         this.port = NetworkConfig.DEFAULT_PORT;
@@ -139,6 +145,7 @@ public class StorageNode implements Node {
     }
 
     private class ShutdownHandler extends Thread {
+
         @Override
         public void run() {
             /* The logging subsystem may have already shut down, so we revert to
@@ -160,9 +167,63 @@ public class StorageNode implements Node {
         }
     }
 
+    /**
+     * Handles a query request from a client.  Query requests result in a number
+     * of subqueries being performed across the Mendel network.
+     */
+    @EventHandler
+    public void handleQueryRequest(QueryRequest request, EventContext context)
+            throws IOException, SerializationException {
+
+        String queryString = request.getQueryString();
+        logger.log(Level.INFO, "Query request: {0}", queryString);
+
+        /* Add query to tracker */
+        QueryTracker tracker = new QueryTracker(context);
+        String queryID = tracker.getIdString(sessionId);
+        queryTrackers.put(queryID, tracker);
+
+        /* Determine StorageNodes that contain relevant data. */
+        List<NodeInfo> queryNodes = new ArrayList<>();
+
+        /* TODO: For now just forward to all the nodes */
+        queryNodes.addAll(network.getAllNodes());
+
+        QueryEvent query = new QueryEvent(request.getQuery(), queryID);
+        for (NodeInfo node : queryNodes) {
+            sendEvent(node, query);
+        }
+    }
+
+    @EventHandler
+    public void handleQuery(QueryRequest request, EventContext context)
+            throws IOException, SerializationException {
+
+        logger.log(Level.INFO, "Handling query {0}", request.getQueryString());
+
+        Block response = fileSystem.query(request.getQuery());
+        List<Block> list = new ArrayList<>();
+        list.add(response);
+        QueryResponse queryResponse = new QueryResponse(list, request.getQueryID());
+        context.sendReply(queryResponse);
+    }
+
+    @EventHandler
+    public void handleQueryResponse(
+            QueryResponse response, EventContext context) throws IOException {
+
+        logger.log(Level.INFO, "Query response to query ID: {0}",
+                response.getQueryID());
+
+        /* Get query destination from tracker */
+        QueryTracker tracker = queryTrackers.get(response.getQueryID());
+
+        /* Forward the response to the client */
+        tracker.getContext().sendReply(response);
+    }
+
     private void sendEvent(NodeInfo node, Event event)
             throws IOException {
         connectionPool.sendMessage(node, eventReactor.wrapEvent(event));
     }
-
 }

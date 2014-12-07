@@ -1,15 +1,15 @@
 /*
  * Copyright (c) 2014, Colorado State University All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer. 2. Redistributions in
  * binary form must reproduce the above copyright notice, this list of
  * conditions and the following disclaimer in the documentation and/or other
  * materials provided with the distribution.
- * 
+ *
  * This software is provided by the copyright holders and contributors "as is"
  * and any express or implied warranties, including, but not limited to, the
  * implied warranties of merchantability and fitness for a particular purpose
@@ -23,51 +23,46 @@
  * possibility of such damage.
  */
 
-/**
- *
- *
- * @author ctolooee
- */
-package mendel.data;
+package mendel.comm;
 
+import mendel.event.Event;
+import mendel.fs.Block;
 import mendel.serialize.ByteSerializable;
+import mendel.serialize.SerializationException;
 import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
 
 import java.io.IOException;
+import java.util.List;
 
-public class Metadata implements ByteSerializable {
+public class QueryResponse implements ByteSerializable, Event {
 
-    //TODO Add to this as we figure it out what formats we have for meta
-    private String seqBlock;
-    private String name;
+    List<Block> response;
+    String queryID;
 
-    public Metadata(String seqBlock, String name) {
-        this.seqBlock = seqBlock;
-        this.name = name;
+    public QueryResponse(List<Block> response, String queryID) {
+        this.response = response;
+        this.queryID = queryID;
+
     }
 
-    public Metadata(byte[] data, String name) {
-        this.seqBlock = new String(data);
-        this.name = name;
+    public QueryResponse(SerializationInputStream in)
+            throws IOException, SerializationException {
+        int size = in.readInt();
+        for (int i = 0; i < size; i++) {
+            response.add(new Block(in));
+        }
     }
 
-    public Metadata(SerializationInputStream in) throws IOException {
-        this.seqBlock = in.readString();
-        this.name = in.readString();
+    public String getQueryID() {
+        return queryID;
     }
 
     @Override
     public void serialize(SerializationOutputStream out) throws IOException {
-        out.writeString(seqBlock);
-        out.writeString(name);
-    }
-
-    public String getSeqBlock() {
-        return seqBlock;
-    }
-
-    public String getName() {
-        return name;
+        out.writeInt(response.size());
+        for (Block block : response) {
+            out.writeSerializable(block);
+        }
     }
 }
