@@ -38,7 +38,7 @@ import java.io.IOException;
  *
  * @author ctolooee
  */
-public class ExactQuery implements ByteSerializable{
+public class ExactQuery implements ByteSerializable {
 
     private String sequence;
 
@@ -50,6 +50,7 @@ public class ExactQuery implements ByteSerializable{
         return sequence;
     }
 
+    @Deserialize
     public ExactQuery (SerializationInputStream in) throws IOException {
         this.sequence = in.readString();
     }
