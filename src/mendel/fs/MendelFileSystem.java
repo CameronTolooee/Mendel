@@ -26,6 +26,7 @@
 package mendel.fs;
 
 import mendel.data.Metadata;
+import mendel.query.ExactQuery;
 import mendel.serialize.SerializationException;
 import mendel.serialize.Serializer;
 import mendel.util.PerformanceTimer;
@@ -33,9 +34,7 @@ import mendel.util.PerformanceTimer;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,6 +43,9 @@ public class MendelFileSystem implements FileSystem {
     private static Logger logger = Logger.getLogger("mendel");
     private File storageDirectory;
     private boolean readOnly;
+
+    /* Temporary Metadata structure for exact matching queries */
+    Map<String, String> metadataMap;
 
     public MendelFileSystem(String storageRoot)
             throws FileSystemException, IOException {
@@ -54,6 +56,8 @@ public class MendelFileSystem implements FileSystem {
             throws FileSystemException, IOException {
         logger.info("Initializing Mendel File System.");
         logger.info("Storage directory: " + storageRoot);
+
+        metadataMap = new HashMap<>();
 
         /* Ensure the storage directory exists. */
         storageDirectory = new File(storageRoot);
@@ -211,6 +215,7 @@ public class MendelFileSystem implements FileSystem {
         byte[] blockData = Serializer.serialize(block);
         blockOutStream.write(blockData);
         blockOutStream.close();
+        metadataMap.put(block.getMetadata().getSeqBlock(), blockPath);
         return blockPath;
     }
 
@@ -252,5 +257,20 @@ public class MendelFileSystem implements FileSystem {
      */
     public void shutdown() {
 
+    }
+
+    public Block query(ExactQuery query)
+            throws IOException, SerializationException {
+        String path = metadataMap.get(query.getSequence());
+        if (path == null) {
+            return null;
+        }else {
+            File f = new File(path);
+            if (f.exists() && !f.isDirectory()) {
+                return loadBlock(path);
+            } else {
+                return null;
+            }
+        }
     }
 }
