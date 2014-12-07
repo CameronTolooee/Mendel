@@ -28,7 +28,7 @@ package mendel.event;
 import mendel.serialize.ByteSerializable;
 
 /**
- * Defines an interface for events in the Galileo network.
+ * Defines an interface for events in the Mendel network.
  *
  * @author malensek
  */
