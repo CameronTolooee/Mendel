@@ -59,13 +59,23 @@ public class MendelFileSystem implements FileSystem {
 
         metadataMap = new HashMap<>();
 
-        /* Ensure the storage directory exists. */
+        /* Ensure the storage and file system directories exists. */
         storageDirectory = new File(storageRoot);
+        File fsDirectory = new File(storageRoot + "/fs/");
         if (!storageDirectory.exists()) {
             logger.warning("Root storage directory does not exist. " +
                     "Attempting to create.");
             if (!storageDirectory.mkdirs()) {
                 throw new FileSystemException("Unable to create storage " +
+                        "directory.");
+            }
+        }
+
+        if (!fsDirectory.exists()) {
+            logger.warning("Root file system directory does not exist. " +
+                    "Attempting to create.");
+            if (!fsDirectory.mkdirs()) {
+                throw new FileSystemException("Unable to create file system " +
                         "directory.");
             }
         }
@@ -209,7 +219,7 @@ public class MendelFileSystem implements FileSystem {
             UUID blockUUID = UUID.nameUUIDFromBytes(block.getData());
             name = blockUUID.toString();
         }
-        String blockPath = storageDirectory + "/" + name
+        String blockPath = storageDirectory + "/fs/" + name
                 + FileSystem.BLOCK_EXTENSION;
         FileOutputStream blockOutStream = new FileOutputStream(blockPath);
         byte[] blockData = Serializer.serialize(block);
@@ -259,12 +269,20 @@ public class MendelFileSystem implements FileSystem {
 
     }
 
+    /**
+     * Searches the root file system for the file genereated by the query.
+     *
+     * @param query they query containing data to generate filename
+     * @return the Block of the file data if it exists; null otherwise
+     * @throws IOException
+     * @throws SerializationException
+     */
     public Block query(ExactQuery query)
             throws IOException, SerializationException {
         String path = metadataMap.get(query.getSequence());
         if (path == null) {
             return null;
-        }else {
+        } else {
             File f = new File(path);
             if (f.exists() && !f.isDirectory()) {
                 return loadBlock(path);

@@ -25,6 +25,7 @@ software, even if advised of the possibility of such damage.
 
 package mendel.dht.hash;
 
+import mendel.data.Metadata;
 import mendel.util.Checksum;
 
 import java.math.BigInteger;
@@ -35,14 +36,14 @@ import java.util.Random;
  *
  * @author malensek
  */
-public class SHA1 implements HashFunction<byte[]> {
+public class SHA1 implements HashFunction<Metadata> {
 
     private Checksum checksum = new Checksum();
     private Random random = new Random();
 
     @Override
-    public synchronized BigInteger hash(byte[] data) throws HashException {
-        return new BigInteger(1, checksum.hash(data));
+    public synchronized BigInteger hash(Metadata data) throws HashException {
+        return new BigInteger(1, checksum.hash(data.getSeqBlock().getBytes()));
     }
 
     @Override
@@ -55,6 +56,6 @@ public class SHA1 implements HashFunction<byte[]> {
     public synchronized BigInteger randomHash() throws HashException {
         byte[] randomBytes = new byte[1024];
         random.nextBytes(randomBytes);
-        return hash(randomBytes);
+        return new BigInteger(1, checksum.hash(randomBytes));
     }
 }

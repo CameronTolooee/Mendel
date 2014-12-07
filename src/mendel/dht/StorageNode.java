@@ -25,20 +25,28 @@
 
 package mendel.dht;
 
-import mendel.comm.QueryEvent;
-import mendel.comm.QueryRequest;
-import mendel.comm.QueryResponse;
+import mendel.comm.*;
 import mendel.config.NetworkConfig;
 import mendel.config.SystemConfig;
+import mendel.data.Metadata;
 import mendel.dht.hash.HashException;
 import mendel.dht.hash.HashTopologyException;
+import mendel.dht.partition.PartitionException;
 import mendel.dht.partition.PartitionerException;
 import mendel.dht.partition.SHA1Partitioner;
-import mendel.event.*;
+import mendel.event.Event;
+import mendel.event.EventContext;
+import mendel.event.EventException;
+import mendel.event.EventHandler;
+import mendel.event.EventReactor;
 import mendel.fs.Block;
 import mendel.fs.FileSystemException;
 import mendel.fs.MendelFileSystem;
-import mendel.network.*;
+import mendel.network.ClientConnectionPool;
+import mendel.network.HostIdentifier;
+import mendel.network.NetworkInfo;
+import mendel.network.NodeInfo;
+import mendel.network.ServerMessageRouter;
 import mendel.serialize.SerializationException;
 import mendel.util.Version;
 
@@ -64,7 +72,7 @@ public class StorageNode implements Node {
     private File pidFile;
 
     private ClientConnectionPool connectionPool;
-    private EventMap eventMap = new EventMap();
+    private MendelEventMap eventMap = new MendelEventMap();
     private EventReactor eventReactor = new EventReactor(this, eventMap);
     private MendelFileSystem fileSystem;
     private ConcurrentHashMap<String, QueryTracker> queryTrackers
@@ -176,11 +184,11 @@ public class StorageNode implements Node {
             throws IOException, SerializationException {
 
         String queryString = request.getQueryString();
-        logger.log(Level.INFO, "Query request: {0}", queryString);
 
         /* Add query to tracker */
         QueryTracker tracker = new QueryTracker(context);
         String queryID = tracker.getIdString(sessionId);
+        logger.log(Level.INFO, "Query request: {0}", queryID);
         queryTrackers.put(queryID, tracker);
 
         /* Determine StorageNodes that contain relevant data. */
@@ -195,19 +203,37 @@ public class StorageNode implements Node {
         }
     }
 
+    /**
+     * Performs the query versus the data on this Node and replies the results
+     * back to the sender.
+     *
+     * TODO Queries with no results should still reply stating no results found
+     */
     @EventHandler
-    public void handleQuery(QueryRequest request, EventContext context)
+    public void handleQuery(QueryEvent request, EventContext context)
             throws IOException, SerializationException {
 
-        logger.log(Level.INFO, "Handling query {0}", request.getQueryString());
+        logger.log(Level.INFO, "Handling query {0}", request.getQueryID());
 
         Block response = fileSystem.query(request.getQuery());
-        List<Block> list = new ArrayList<>();
-        list.add(response);
-        QueryResponse queryResponse = new QueryResponse(list, request.getQueryID());
-        context.sendReply(queryResponse);
+
+        if (response != null) {
+
+            List<Block> list = new ArrayList<>();
+            list.add(response);
+            QueryResponse queryResponse = new QueryResponse(list,
+                    request.getQueryID());
+
+            context.sendReply(queryResponse);
+        } else {
+            logger.log(Level.INFO, "Query response is null");
+        }
     }
 
+    /**
+     * Forwards all the queries responses from the initial query request back to
+     * the client.
+     */
     @EventHandler
     public void handleQueryResponse(
             QueryResponse response, EventContext context) throws IOException {
@@ -220,6 +246,33 @@ public class StorageNode implements Node {
 
         /* Forward the response to the client */
         tracker.getContext().sendReply(response);
+    }
+
+    /**
+     * Handles a storage request from a client.  This involves determining where
+     * the data belongs via a {@link mendel.dht.partition.Partitioner}
+     * implementation and then forwarding the data on to its destination.
+     */
+    @EventHandler
+    public void handleStorageRequest(
+            StorageRequest request, EventContext context)
+            throws HashException, IOException, PartitionException {
+
+        /* Determine where this block goes. */
+        Block file = request.getBlock();
+        Metadata metadata = file.getMetadata();
+        NodeInfo node = partitioner.locateData(metadata);
+
+        logger.log(Level.INFO, "Storage destination: {0}", node);
+        StorageEvent store = new StorageEvent(file);
+        sendEvent(node, store);
+    }
+
+    @EventHandler
+    public void handleStorage(StorageEvent store, EventContext context)
+            throws FileSystemException, IOException {
+        logger.log(Level.INFO, "Storing block: {0}", store.getBlock());
+        fileSystem.storeBlock(store.getBlock());
     }
 
     private void sendEvent(NodeInfo node, Event event)

@@ -26,6 +26,7 @@
 package mendel.dht.partition;
 
 import mendel.dht.StorageNode;
+import mendel.dht.hash.HashException;
 import mendel.network.NetworkInfo;
 import mendel.network.NodeInfo;
 
@@ -54,6 +55,6 @@ public abstract class Partitioner<T> {
      *
      * @param data data to find the location in the network for.
      */
-    public abstract NodeInfo locateData(T data);
+    public abstract NodeInfo locateData(T data) throws HashException, PartitionException;
 
 }

@@ -27,10 +27,7 @@ package mendel.dht.partition;
 
 import mendel.data.Metadata;
 import mendel.dht.StorageNode;
-import mendel.dht.hash.BalancedHashRing;
-import mendel.dht.hash.HashException;
-import mendel.dht.hash.HashTopologyException;
-import mendel.dht.hash.SHA1;
+import mendel.dht.hash.*;
 import mendel.network.GroupInfo;
 import mendel.network.NetworkInfo;
 import mendel.network.NodeInfo;
@@ -52,11 +49,11 @@ public class SHA1Partitioner extends Partitioner<Metadata> {
 
     private Logger logger = Logger.getLogger("mendel");
 
-    private BalancedHashRing<byte[]> groupHashRing;
+    private BalancedHashRing<Metadata> groupHashRing;
     private Map<BigInteger, GroupInfo> groupPositions = new HashMap<>();
 
     private SHA1 hash = new SHA1();
-    private Map<BigInteger, BalancedHashRing<byte[]>> nodeHashRings
+    private HashMap<BigInteger, BalancedHashRing<Metadata>> nodeHashRings
             = new HashMap<>();
     private Map<BigInteger, Map<BigInteger, NodeInfo>> nodePositions
             = new HashMap<>();
@@ -94,7 +91,7 @@ public class SHA1Partitioner extends Partitioner<Metadata> {
 
     private void placeNode(BigInteger groupPosition, NodeInfo node) throws
             HashException, HashTopologyException {
-        BalancedHashRing<byte[]> hashRing = nodeHashRings.get(groupPosition);
+        BalancedHashRing<Metadata> hashRing = nodeHashRings.get(groupPosition);
         BigInteger nodePosition = hashRing.addNode(null);
 
         GroupInfo group = groupPositions.get(groupPosition);
@@ -110,7 +107,19 @@ public class SHA1Partitioner extends Partitioner<Metadata> {
     }
 
     @Override
-    public NodeInfo locateData(Metadata data) {
-        return null;
+    public NodeInfo locateData(Metadata metadata)
+            throws HashException, PartitionException {
+
+        /* First, determine the group that should hold this file */
+        BigInteger group = groupHashRing.locate(metadata);
+
+        /* Next, the StorageNode */
+        HashRing<Metadata> nodeHash = nodeHashRings.get(group);
+        BigInteger node = nodeHash.locate(metadata);
+        NodeInfo info = nodePositions.get(group).get(node);
+        if (info == null) {
+            throw new PartitionException("Could not locate specified data");
+        }
+        return info;
     }
 }
