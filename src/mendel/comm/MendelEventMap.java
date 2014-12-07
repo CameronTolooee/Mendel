@@ -29,6 +29,9 @@ import mendel.event.EventMap;
 
 public class MendelEventMap extends EventMap {
     public MendelEventMap() {
+        addMapping(100, StorageEvent.class);
+        addMapping(101, StorageRequest.class);
+
         addMapping(200, QueryEvent.class);
         addMapping(201, QueryRequest.class);
         addMapping(203, QueryResponse.class);
