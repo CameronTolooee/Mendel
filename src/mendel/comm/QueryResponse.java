@@ -33,6 +33,7 @@ import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class QueryResponse implements ByteSerializable, Event {
@@ -46,16 +47,24 @@ public class QueryResponse implements ByteSerializable, Event {
 
     }
 
+    public String getQueryID() {
+        return queryID;
+    }
+
+    public List<Block> getResponse() {
+        return response;
+    }
+
+
+    @Deserialize
     public QueryResponse(SerializationInputStream in)
             throws IOException, SerializationException {
         int size = in.readInt();
+        response = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             response.add(new Block(in));
         }
-    }
-
-    public String getQueryID() {
-        return queryID;
+        queryID = in.readString();
     }
 
     @Override
@@ -64,5 +73,6 @@ public class QueryResponse implements ByteSerializable, Event {
         for (Block block : response) {
             out.writeSerializable(block);
         }
+        out.writeString(queryID);
     }
 }

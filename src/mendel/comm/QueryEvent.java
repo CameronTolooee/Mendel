@@ -57,11 +57,13 @@ public class QueryEvent implements Event {
     public QueryEvent(SerializationInputStream in)
             throws IOException, SerializationException {
         query = new ExactQuery(in);
+        queryID = in.readString();
     }
 
     @Override
     public void serialize(SerializationOutputStream out)
             throws IOException {
         out.writeSerializable(query);
+        out.writeString(queryID);
     }
 }

@@ -39,7 +39,7 @@ public class QueryTest {
     public static void main(String[] args) throws Exception {
         List<Block> blocks = new ArrayList<>();
 
-        MendelFileSystem gfs =
+        MendelFileSystem fs =
                 new MendelFileSystem("C:\\Users\\Ctolooee\\Desktop\\fs");
 
         for (int i = 0; i < 10; i++) {
@@ -53,17 +53,17 @@ public class QueryTest {
         /* Insert the blocks we've loaded, if any */
         if (blocks.size() > 0) {
             for (Block block : blocks) {
-                gfs.storeBlock(block);
+                fs.storeBlock(block);
             }
         }
 
         /* Execute some queries */
         ExactQuery q = new ExactQuery("CCCCCCCCC");
         System.out.println("Query: " + q);
-        Block result = gfs.query(q);
+        Block result = fs.query(q);
         System.out.println(result.getMetadata().getName());
 
-        gfs.shutdown();
+        fs.shutdown();
     }
 
     private static Block generateBlock() {
