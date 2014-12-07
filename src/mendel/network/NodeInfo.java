@@ -34,7 +34,7 @@ import mendel.serialize.SerializationOutputStream;
 /**
  * Maintains a nodes information (i.e. hostname and port)
  *
- * @author ctolooee
+ * @author malensek
  */
 public class NodeInfo implements ByteSerializable {
 
