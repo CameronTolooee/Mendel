@@ -15,9 +15,6 @@ depcache
 build.properties
 config.properties
 
-# javadoc-generated documentation
-docs/api
-
 # Mac OS File Attributes
 .DS_Store
 
