@@ -25,8 +25,8 @@
 
 package mendel.test;
 
-import mendel.tree.Kmer;
-import mendel.tree.VPPoint;
+import mendel.tree2.Kmer;
+import mendel.tree2.VPPoint;
 import mendel.tree.VPPrefixTree;
 import mendel.util.Pair;
 
@@ -74,7 +74,7 @@ public class VPPrefixTreeTest {
         /* Linear search results */
         List<Pair<Kmer, Integer>> linear = new ArrayList<>();
         for (VPPoint kmer : list) {
-            int dist = target.distance(kmer);
+            int dist = (int) target.getDistanceTo(kmer);
             linear.add(new Pair<>((Kmer) kmer, dist));
         }
 

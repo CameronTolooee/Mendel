@@ -25,6 +25,8 @@
 
 package mendel.tree;
 
+import mendel.tree2.VPPoint;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -67,7 +69,7 @@ public class VPTree {
             nth_element(lower + 1, median, upper, points.get(lower));
 
             /* The node's threshold is the median distance of its partition */
-            node.threshold = points.get(lower).distance(points.get(median));
+            node.threshold = points.get(lower).getDistanceTo(points.get(median));
 
             node.index = lower;
             node.left = buildFromPoints(lower + 1, median);
@@ -112,7 +114,7 @@ public class VPTree {
         }
 
         /* Get distance from target */
-        int dist = points.get(node.index).distance(target);
+        int dist = (int) points.get(node.index).getDistanceTo(target);
 
         /* If distance less than tau, its a nearest neighbor found, THUS FAR */
         if (dist < tau) {
@@ -161,12 +163,12 @@ public class VPTree {
      * are greater.
      */
     protected int nth_element(int lower, int median, int upper, VPPoint vp) {
-        int medianDist = points.get(median).distance(vp);
+        int medianDist = (int) points.get(median).getDistanceTo(vp);
         while (lower <= upper) {
-            while (points.get(lower).distance(vp) < medianDist) {
+            while (points.get(lower).getDistanceTo(vp) < medianDist) {
                 lower++;
             }
-            while (points.get(upper - 1).distance(vp) > medianDist) {
+            while (points.get(upper - 1).getDistanceTo(vp) > medianDist) {
                 upper--;
             }
             if (lower <= upper) {

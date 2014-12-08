@@ -23,7 +23,7 @@
  * possibility of such damage.
  */
 
-package mendel.tree;
+package mendel.tree2;
 
 
 /**
@@ -39,16 +39,23 @@ public class Kmer implements VPPoint {
         this.word = word;
     }
 
+    public Kmer(Kmer other) {
+        this.word = other.word;
+    }
+
+    public Kmer(VPPoint center) {
+    }
+
     @Override
     /**
      * Modified Hamming distance function implementation for contig reads.
      * Calculates the Hamming distance between <code>this</code> and the
      * parameter, taking wildcard characters into account.
      *
-     * @param other the other {@link mendel.tree.Kmer} to compare the Hamming
+     * @param other the other {@link Kmer} to compare the Hamming
      *              distance to.
      */
-    public int distance(VPPoint other) {
+    public double getDistanceTo(VPPoint other) {
         String word2;
         /* Validate arguments */
         if (other instanceof Kmer) {
@@ -74,7 +81,6 @@ public class Kmer implements VPPoint {
         return count;
     }
 
-    @Override
     public boolean verifyMetricSpace() {
         //TODO
         return false;

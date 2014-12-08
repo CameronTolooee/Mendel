@@ -25,8 +25,8 @@
 
 /**
  * Implementation of the Vantage-point tree used for content distribution. This
- * implementation was influenced by Steve Hanov on his blog
- * (http://stevehanov.ca/blog/index.php?id=130)
+ * implementation was influenced by Jon Chambers from his Geospatial Point
+ * database, <a href="https://github.com/jchambers/jeospatial">Jeospatial</a>.
  *
  * @author ctolooee
  */

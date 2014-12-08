@@ -28,7 +28,6 @@ package mendel.query;
 import mendel.serialize.ByteSerializable;
 import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
-import mendel.tree.Kmer;
 
 import java.io.IOException;
 

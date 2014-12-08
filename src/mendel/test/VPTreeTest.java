@@ -26,8 +26,8 @@
 package mendel.test;
 
 import mendel.util.Pair;
-import mendel.tree.Kmer;
-import mendel.tree.VPPoint;
+import mendel.tree2.Kmer;
+import mendel.tree2.VPPoint;
 import mendel.tree.VPTree;
 
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ public class VPTreeTest {
         /* Linear search results */
         List<Pair<Kmer, Integer>> linear = new ArrayList<>();
         for (VPPoint kmer : list) {
-            int dist = target.distance(kmer);
+            int dist = (int) target.getDistanceTo(kmer);
             linear.add(new Pair<Kmer, Integer>((Kmer) kmer, dist));
         }
 
