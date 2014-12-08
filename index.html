@@ -28,14 +28,59 @@
       </header>
       <section>
         <h1>
-<a id="mendel" class="anchor" href="#mendel" aria-hidden="true"><span class="octicon octicon-link"></span></a>Welcome!</h1>
+<a id="setting-up-mendel" class="anchor" href="#setting-up-mendel" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setting Up Mendel</h1>
 
-<p>Mendel is a distributed storage system aimed at achieving speedy sequence comparison over numerous genomes. 
-For documentation to setup a Mendel cluster see the <a href="github.io/Mendel/setup.html">setup page</a>.</p>
+<p>The following tutorial will get a Mendel cluster up and running.</p>
+
+<h2>
+<a id="prerequisites" class="anchor" href="#prerequisites" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prerequisites</h2>
+
+<ul>
+<li>Java 7</li>
+<li><a href="http://www.cs.colostate.edu/%7Ectolooee/Mendel">Mendel</a></li>
+</ul>
+
+<h2>
+<a id="passwordless-ssh" class="anchor" href="#passwordless-ssh" aria-hidden="true"><span class="octicon octicon-link"></span></a>Passwordless SSH</h2>
+
+<p>Managing the cluster requires some form of passwordless login for any reasonably-sized installation.</p>
+
+<p>In general, the best way to accomplish this is to generate a public and private SSH key pair, and then distribute the public key to machines in the cluster you wish to run storage nodes on.  I would recommend using a password on your private key combined with <em>ssh-agent</em> to make life easier, although if you're on a secure installation you can probably skip the private key password.  Either way, consult your operating system's documentation, or see <a href="http://mah.everybody.org/docs/ssh">Using ssh-agent with ssh</a> by Mark A. Hershberger to get you up and running.</p>
+
+<h2>
+<a id="mendel-configuration" class="anchor" href="#mendel-configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Mendel Configuration</h2>
+
+<p>Mendel doesn't necessarily require any configuration, and will try to store everything in its installation directory if it is writable. This is fine for a single-node setup for testing purposes, but if you want to run a fully-fledged cluster you must modify the <code>conf/config.properties</code> file in the conf/ directory.</p>
+
+<h3>
+<a id="property-configuration" class="anchor" href="#property-configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Property Configuration</h3>
+
+<p>The <code>conf/config.properties</code> file specifies two major properties:</p>
+
+<ul>
+<li>mendel.home.dir -- Mendel installation directory</li>
+<li>mendel.root.dir -- Where the file system root is stored. Files, journal, logs, etc... live here</li>
+</ul>
+
+<p>All the property specifications are described in the <code>conf/config.properties</code> file with examples.</p>
+
+<h3>
+<a id="storage-nodes" class="anchor" href="#storage-nodes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Storage Nodes</h3>
+
+<p>You must specify the storage nodes that make up your cluster. The <code>conf/nodes</code> file contain a list of hosts to act as the storage nodes. The file contains host names or IP addresses, one per line, and their storage node port number (if not set the default port will be used). An example <code>nodes</code> file is shown below:</p>
+
+<pre><code>lattice-0:8989
+lattice-1
+lattice-2
+lattice-3
+129.82.45.204:5055
+129.82.46.59
+</code></pre>
       </section>
     </div>
     <footer>
       <p>Project maintained by <a href="https://github.com/CameronTolooee">CameronTolooee</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
     </footer>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
     
