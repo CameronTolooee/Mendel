@@ -50,7 +50,7 @@ public class QueryTest {
         Metadata meta = new Metadata(seq, uuid);
         blocks.add(new Block(meta, seq.getBytes()));
 
-        /* Insert the blocks we've loaded, if any */
+        /* Insert the blocks */
         if (blocks.size() > 0) {
             for (Block block : blocks) {
                 fs.storeBlock(block);
