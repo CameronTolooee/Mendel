@@ -23,7 +23,7 @@
  * possibility of such damage.
  */
 
-package mendel.tree2;
+package mendel.tree;
 
 
 /**
@@ -44,11 +44,17 @@ public class Kmer implements VPPoint {
     }
 
     public Kmer(VPPoint center) {
+        if (!(center instanceof Kmer)) {
+            throw new IllegalArgumentException();
+        } else {
+            Kmer other = (Kmer) center;
+            this.word = other.word;
+        }
     }
 
     @Override
     /**
-     * Modified Hamming distance function implementation for contig reads.
+     * Modified Hamming distance function implementation for config reads.
      * Calculates the Hamming distance between <code>this</code> and the
      * parameter, taking wildcard characters into account.
      *

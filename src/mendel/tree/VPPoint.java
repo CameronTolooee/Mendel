@@ -1,4 +1,4 @@
-package mendel.tree2;
+package mendel.tree;
 
 /**
  * An interface that defines a single point in a vp-tree. All points must have a

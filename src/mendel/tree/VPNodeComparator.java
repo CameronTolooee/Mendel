@@ -23,12 +23,21 @@
  * possibility of such damage.
  */
 
-/**
- * Implementation of the Vantage-point tree used for content distribution;
- * stolen from Jon Chambers from his Geospatial Point database,
- * <a href="https://github.com/jchambers/jeospatial">Jeospatial</a> and heavily
- * modified.
- *
- * @author ctolooee
- */
 package mendel.tree;
+
+import java.util.Comparator;
+
+public class VPNodeComparator implements Comparator<VPPoint> {
+    private VPPoint vantagePoint;
+
+    public VPNodeComparator(VPPoint vantagePoint){
+        this.vantagePoint = vantagePoint;
+    }
+
+    @Override
+    public int compare(VPPoint p1, VPPoint p2) {
+        int p1Dist = (int) p1.getDistanceTo(vantagePoint);
+        int p2Dist = (int) p2.getDistanceTo(vantagePoint);
+        return p1Dist - p2Dist;
+    }
+}

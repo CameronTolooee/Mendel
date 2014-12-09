@@ -23,10 +23,11 @@
  * possibility of such damage.
  */
 
-package mendel.tree2;
+package mendel.tree;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -83,7 +84,8 @@ public class BoundedPriorityQueue<E extends VPPoint> extends PriorityQueue<E> {
      */
     public boolean addAll(Collection<? extends E> collection) {
         if (this.equals(collection)) {
-            throw new IllegalArgumentException("Cannot addAll of a queue to itself.");
+            throw new IllegalArgumentException("Cannot addAll of a " +
+                    "queue to itself.");
         }
 
         boolean added = false;
@@ -102,8 +104,8 @@ public class BoundedPriorityQueue<E extends VPPoint> extends PriorityQueue<E> {
      * <code>center.getDistanceTo(peek())</code>
      *
      * @return the distance of the furthest element from the center in the
-     *      queue or <code>Double.POSITIVE_INFINITY</code> if the queue is
-     *      empty.
+     * queue or <code>Double.POSITIVE_INFINITY</code> if the queue is
+     * empty.
      */
     public double getFurthestDistance() {
         double furthest;
@@ -120,11 +122,12 @@ public class BoundedPriorityQueue<E extends VPPoint> extends PriorityQueue<E> {
      * increasing distance from the query point provided at construction time.
      * The result set itself is not modified by calls to this method.
      *
+     * @param queryPoint
      * @return a sorted list of the points in this result set
      */
-    public List<E> toSortedList() {
+    public List<E> toSortedList(VPPoint queryPoint) {
         ArrayList<E> sortedList = new ArrayList<>(this);
-        java.util.Collections.sort(sortedList);
+        Collections.sort(sortedList, new VPNodeComparator(queryPoint));
         return sortedList;
     }
 }
