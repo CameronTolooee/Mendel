@@ -124,7 +124,8 @@ public class ClientTest implements MessageListener {
             e.printStackTrace();
         }
     }
-    public static void main(String[] args) throws IOException, InterruptedException, SerializationException {
+    public static void main(String[] args) throws IOException,
+            InterruptedException, SerializationException {
         if (args.length < 2) {
             System.out.println("Usage: mendel.test.ClientTest host port");
             System.exit(1);
