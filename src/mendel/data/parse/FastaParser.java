@@ -32,7 +32,9 @@ import java.util.Iterator;
  * A parser for iterating over FASTA files. This is used for loading data
  * into the Mendel distrusted file system. A typical use case would be to
  * use the default line iterator (vie the {@link this.iterator()} method) and
- * staging each line as a data block.
+ * staging each line as a data block. The iterator's remove method is not
+ * supported. Modifying the lines or records will invalidate the iterator,
+ * making its behavior undefined.
  *
  * @author ctolooee
  */
@@ -43,7 +45,7 @@ public class FastaParser implements Iterable<String> {
     /**
      * Constructs a FASTA file parser over the {@link java.io.InputStream}.
      *
-     * @param in the input stream
+     * @param in  the input stream over the fasta file to parse
      */
     public FastaParser(InputStream in) {
         reader = new BufferedReader(new InputStreamReader(in));
@@ -52,7 +54,7 @@ public class FastaParser implements Iterable<String> {
     /**
      * Constructs a FASTA file parser over the {@link java.io.File}.
      *
-     * @param file the file
+     * @param file  the fasta file to parse
      * @throws FileNotFoundException if the file does not exist, is a
      *                               directory rather than a regular file, or
      *                               for some other reason cannot
@@ -66,7 +68,7 @@ public class FastaParser implements Iterable<String> {
      * Constructs a FASTA file parser over the FASTA file at the given
      * absolute path.
      *
-     * @param absolutePath the absolute path to the FASTA file
+     * @param absolutePath  the absolute path to the FASTA file
      * @throws FileNotFoundException if the file does not exist, is a
      *                               directory rather than a regular file, or
      *                               for some other reason cannot
@@ -116,7 +118,7 @@ public class FastaParser implements Iterable<String> {
     /**
      * Implementation inspired by Brian Gilstrap's blog on making
      * BufferedReader's iterable
-     * <p/>
+     * <p>
      * @see <a href="http://bit.ly/1AXaiG4" >Brian Gilstrap's blog post</a>
      */
     private class FastaLineIterator implements Iterator<String> {
@@ -160,7 +162,7 @@ public class FastaParser implements Iterable<String> {
         }
 
         /**
-         * NOT IMPLEMENTED
+         * NOT SUPPORTED
          */
         @Override
         public void remove() {
@@ -182,7 +184,7 @@ public class FastaParser implements Iterable<String> {
         }
 
         /**
-         * NOT IMPLEMENTED
+         * NOT SUPPORTED
          */
         @Override
         public void remove() {
