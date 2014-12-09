@@ -20,6 +20,10 @@
 
     <property name="main-class"  value="test.TestClient" />
 
+    <path id="classpath">
+        <fileset dir="." includes="lib/*.jar"/>
+    </path>
+
     <!-- Clean project for release version -->
     <target name="cleanrelease">
         <delete dir="${build.dir}" />
@@ -36,7 +40,14 @@
     <!-- Compile source code -->
     <target name="compile">
         <mkdir dir="${classes.dir}" />
-        <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false" />
+	 <javac srcdir="${src.dir}"
+                destdir="${build.dir}"
+                classpathref="classpath"
+                debug="on"
+                includeantruntime="false">
+            <compilerarg value="-Xlint"/>
+        </javac>    
+
     </target>
 
     <target name="jar" depends="compile">
