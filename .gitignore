@@ -15,6 +15,9 @@ depcache
 build.properties
 config.properties
 
+# data files
+data
+
 # javadoc-generated documentation
 docs/api
 
