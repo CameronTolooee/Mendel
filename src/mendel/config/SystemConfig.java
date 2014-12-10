@@ -55,6 +55,9 @@ public class SystemConfig {
     /** Mendel install directory (binaries, libraries) */
     private static String homeDir;
 
+    /** Flag for determining whether to write out files */
+    private static boolean psuedoFS;
+
     /**
      * Retrieves the system root directory. This directory is where Mendel
      * stores files.
@@ -77,6 +80,14 @@ public class SystemConfig {
      */
     public static String getInstallDir() {
         return homeDir;
+    }
+
+    /**
+     * Retrieves the flag that determines whether psuedoFS mode has been
+     * enabled.
+     */
+    public static boolean getPseudoFS() {
+        return psuedoFS;
     }
 
     /**
@@ -126,6 +137,12 @@ public class SystemConfig {
         }
         rootDir = storageDir;
         logger.info("Mendel file system storage root set to: " + rootDir);
+
+        String psuedoProp = prop.getProperty("enable.psuedoFS");
+        psuedoFS = Boolean.parseBoolean(psuedoProp);
+        if(psuedoFS) {
+            logger.info("PsuedoFS mode enabled");
+        }
     }
 
     /**
