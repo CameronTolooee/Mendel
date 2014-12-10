@@ -24,10 +24,11 @@
  */
 
 /**
- * Implementation of the Vantage-point tree used for content distribution. This
- * implementation was influenced by Steve Hanov on his blog
- * (http://stevehanov.ca/blog/index.php?id=130)
+ * Implementation of the Vantage-point vptree used for content distribution;
+ * stolen from Jon Chambers from his Geospatial Point database,
+ * <a href="https://github.com/jchambers/jeospatial">Jeospatial</a> and heavily
+ * modified.
  *
  * @author ctolooee
  */
-package mendel.tree;
+package mendel.vptree;

@@ -23,7 +23,7 @@
  * possibility of such damage.
  */
 
-package mendel.tree;
+package mendel.vptree;
 
 import java.util.Comparator;
 

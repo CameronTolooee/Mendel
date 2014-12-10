@@ -1,4 +1,4 @@
-package mendel.tree;
+package mendel.vptree;
 
 
 public class PartitionException extends Exception{
