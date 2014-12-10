@@ -1,7 +1,7 @@
 package mendel.test;
 
-import mendel.tree.Kmer;
-import mendel.tree.VPNode;
+import mendel.vptree.Kmer;
+import mendel.vptree.VPNode;
 import org.junit.After;
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ public class VPNodeTest {
 
     @Test
     public void testNth_element() throws Exception {
-        VPNode<Kmer> test = new VPNode<>(10);
+        VPNode<Kmer> test = new VPNode<>(10, 0);
         /* Create list of k-mers */
         Kmer[] array = new Kmer[7];
         array[4] = new Kmer("AAAAAAA");

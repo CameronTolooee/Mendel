@@ -25,31 +25,32 @@
 
 package mendel.test;
 
-import mendel.util.Pair;
-import mendel.tree.Kmer;
-import mendel.tree.VPPoint;
-import mendel.tree.VPTree;
+import mendel.vptree.Kmer;
+import mendel.vptree.VPTree;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Testing correctness of vp-tree implementation.
+ * Testing correctness of vp-vptree implementation.
  *
  * @author ctolooee
  */
 public class VPTreeTest {
-    @Test
-    public void testVPTree() {
+
+    List<Kmer> list;
+
+    @Before
+    public void setup() {
 
         /* Create list of k-mers */
-        List<Kmer> list = new ArrayList<>();
+        list = new ArrayList<>();
         list.add(new Kmer("ACTGCCTGA"));
         list.add(new Kmer("ACTTCCTGA"));
         list.add(new Kmer("ACTCCCTGA"));
@@ -57,46 +58,44 @@ public class VPTreeTest {
         list.add(new Kmer("GGTGCCTGA"));
         list.add(new Kmer("CGTGATGCA"));
         list.add(new Kmer("ACCCCCCCC"));
+        list.add(new Kmer("AAAAAAACC"));
+        list.add(new Kmer("AAAAAACCC"));
+        list.add(new Kmer("AAAAACCCC"));
+        list.add(new Kmer("AAAACCCCC"));
+        list.add(new Kmer("AAACCCCCC"));
+        list.add(new Kmer("ACCCCCCCC"));
+    }
+
+
+    @Test
+    public void testVPTree() {
 
         VPTree<Kmer> vpTree = new VPTree<>(list, 3);
 
         Kmer target = new Kmer("ACCCCCCCT"); /* Matches ACCCCCCCC" */
-        System.out.println("Searching 'ACCCCCCCT' (matches 'ACCCCCCCC')");
 
         Kmer nearestNeighbor = vpTree.getNearestNeighbor(target);
-        List<Kmer> results = vpTree.getNearestNeighbors(target, list.size());
 
         System.out.println(nearestNeighbor);
         assertEquals(nearestNeighbor, new Kmer("ACCCCCCCC"));
+        //testDOT();
+    }
 
+    private void testDOT() {
 
-
-        /* Linear search results */
-        List<Pair<Kmer, Integer>> linear = new ArrayList<>();
-        for (VPPoint kmer : list) {
-            int dist = (int) target.getDistanceTo(kmer);
-            linear.add(new Pair<>((Kmer) kmer, dist));
-        }
-
-
-        /* Sort results */
-        for (int i = 0; i < linear.size(); i++) {
-            for (int j = 0; j < linear.size() - 1; j++) {
-                if (linear.get(j).b > linear.get(j + 1).b) {
-                    Collections.swap(linear, j, j + 1);
-                }
-            }
-        }
-
-        System.out.println(results.size() + " " + linear.size());
-        System.out.println("Test size: " + vpTree.size());
-        System.out.println("Linear results");
-        for (int i = 0; i < results.size(); i++) {
-            System.out.println(linear.get(i) + " ?= " + results.get(i));
-        }
+        VPTree<Kmer> vpTree = new VPTree<>(list, 3);
+        VPTree<Kmer> vpTree2 = new VPTree<>(3);
         for (Kmer kmer : list) {
-            System.out.println(kmer);
+            vpTree2.add(kmer);
         }
-        System.out.println("done");
+
+        Kmer[] array = new Kmer[vpTree2.size()];
+        vpTree2.toArray(array);
+        List<Kmer> list2 = Arrays.asList(array);
+        VPTree<Kmer> vpTree3 = new VPTree<>(list2, 3);
+
+        System.out.println(vpTree.generateDot());
+        System.out.println(vpTree2.generateDot());
+        System.out.println(vpTree3.generateDot());
     }
 }
