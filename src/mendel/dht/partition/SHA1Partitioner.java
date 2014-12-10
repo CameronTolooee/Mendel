@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * Partition using a vantage point tree as a similarity based hash. To be
+ * Partition using a SHA1 based hash. To be
  * used as a primary hash function to hash data into groups.
  *
  * @author ctolooee
