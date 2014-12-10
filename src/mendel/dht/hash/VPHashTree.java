@@ -25,16 +25,41 @@
 
 package mendel.dht.hash;
 
+import mendel.data.Metadata;
+import mendel.vptree.Kmer;
+import mendel.vptree.VPTree;
+
 import java.math.BigInteger;
 import java.util.Random;
 
-public class VPHashTree implements HashFunction<byte[]> {
+public class VPHashTree implements HashFunction<Metadata> {
 
     private Random random = new Random();
+    private VPTree<Kmer> tree;
+
+    public VPHashTree() {
+        this.tree = new VPTree<>();
+    }
+
+
+    public VPHashTree(VPTree<Kmer> tree) {
+        this.tree = tree;
+    }
+
+    public long lookup(Kmer value) throws HashException {
+        long retval = tree.getPrefixOf(value);
+        if (retval < 0) {
+            if((retval = tree.add(value)) < 0) {
+                throw new HashException("Cannot add " + value + "to VPTree");
+            }
+        }
+        return retval;
+    }
 
     @Override
-    public BigInteger hash(byte[] data) throws HashException {
-        return null;
+    public BigInteger hash(Metadata metadata) throws HashException {
+        Kmer data = new Kmer(metadata.getSeqBlock());
+        return BigInteger.valueOf(lookup(data));
     }
 
     @Override
@@ -44,8 +69,10 @@ public class VPHashTree implements HashFunction<byte[]> {
 
     @Override
     public BigInteger randomHash() throws HashException {
-        byte[] randomBytes = new byte[1024];
-        random.nextBytes(randomBytes);
-        return hash(randomBytes);
+        return BigInteger.valueOf(random.nextLong());
+    }
+
+    public String getHashTreeDOT() {
+        return tree.generateDot();
     }
 }

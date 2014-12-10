@@ -34,6 +34,7 @@ import mendel.dht.hash.HashTopologyException;
 import mendel.dht.partition.PartitionException;
 import mendel.dht.partition.PartitionerException;
 import mendel.dht.partition.SHA1Partitioner;
+import mendel.dht.partition.VPHashPartitioner;
 import mendel.event.Event;
 import mendel.event.EventContext;
 import mendel.event.EventException;
@@ -68,7 +69,7 @@ public class StorageNode implements Node {
     private int port;
     private String sessionId;
     private String rootDir;
-    private SHA1Partitioner partitioner;
+    private VPHashPartitioner partitioner;
     private File pidFile;
 
     private ClientConnectionPool connectionPool;
@@ -132,12 +133,14 @@ public class StorageNode implements Node {
         Runtime.getRuntime().addShutdownHook(new ShutdownHandler());
 
         /* Setup file system */
-        fileSystem = new MendelFileSystem(SystemConfig.getRootDir());
+        boolean psuedoFSMode = SystemConfig.getPseudoFS();
+        fileSystem = new MendelFileSystem(
+                SystemConfig.getRootDir(), psuedoFSMode);
 
         /* Pre-scheduler setup tasks */
         connectionPool = new ClientConnectionPool();
         connectionPool.addListener(eventReactor);
-        partitioner = new SHA1Partitioner(this, network);
+        partitioner = new VPHashPartitioner(this, network);
 
         /* Start listening for incoming messages. */
         messageRouter = new ServerMessageRouter();
@@ -148,6 +151,9 @@ public class StorageNode implements Node {
 
         /* Start processing the message loop */
         while (true) {
+        /* TODO: known bug: all event errors cause "SEVERE StorageNode failed to
+         * TODO:       to start" message in log; move reactor loop out of init
+         */
             eventReactor.processNextEvent();
         }
     }
@@ -172,6 +178,7 @@ public class StorageNode implements Node {
             }
 
             System.out.println("Goodbye!");
+            System.out.println(partitioner.getMetadataTreeDOT());
         }
     }
 
@@ -207,18 +214,17 @@ public class StorageNode implements Node {
      * Performs the query versus the data on this Node and replies the results
      * back to the sender.
      *
-     * TODO Queries with no results should still reply stating no results found
      */
     @EventHandler
     public void handleQuery(QueryEvent request, EventContext context)
             throws IOException, SerializationException {
 
-        logger.log(Level.INFO, "Handling query {0}", request.getQueryID());
+/* TODO Queries with no results should still reply stating no results found */
 
         Block response = fileSystem.query(request.getQuery());
 
         if (response != null) {
-
+            logger.log(Level.INFO, "Handling query {0}", request.getQueryID());
             List<Block> list = new ArrayList<>();
             list.add(response);
             QueryResponse queryResponse = new QueryResponse(list,
@@ -258,9 +264,10 @@ public class StorageNode implements Node {
             StorageRequest request, EventContext context)
             throws HashException, IOException, PartitionException {
 
-        /* Determine where this block goes. */
+        /* Determine where this block goes */
         Block file = request.getBlock();
         Metadata metadata = file.getMetadata();
+
         NodeInfo node = partitioner.locateData(metadata);
 
         logger.log(Level.INFO, "Storage destination: {0}", node);
