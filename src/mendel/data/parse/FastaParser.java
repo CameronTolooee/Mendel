@@ -45,7 +45,7 @@ public class FastaParser implements Iterable<String> {
     /**
      * Constructs a FASTA file parser over the {@link java.io.InputStream}.
      *
-     * @param in  the input stream over the fasta file to parse
+     * @param in the input stream over the fasta file to parse
      */
     public FastaParser(InputStream in) {
         reader = new BufferedReader(new InputStreamReader(in));
@@ -54,7 +54,7 @@ public class FastaParser implements Iterable<String> {
     /**
      * Constructs a FASTA file parser over the {@link java.io.File}.
      *
-     * @param file  the fasta file to parse
+     * @param file the fasta file to parse
      * @throws FileNotFoundException if the file does not exist, is a
      *                               directory rather than a regular file, or
      *                               for some other reason cannot
@@ -68,7 +68,7 @@ public class FastaParser implements Iterable<String> {
      * Constructs a FASTA file parser over the FASTA file at the given
      * absolute path.
      *
-     * @param absolutePath  the absolute path to the FASTA file
+     * @param absolutePath the absolute path to the FASTA file
      * @throws FileNotFoundException if the file does not exist, is a
      *                               directory rather than a regular file, or
      *                               for some other reason cannot
@@ -118,7 +118,8 @@ public class FastaParser implements Iterable<String> {
     /**
      * Implementation inspired by Brian Gilstrap's blog on making
      * BufferedReader's iterable
-     * <p>
+     * <p/>
+     *
      * @see <a href="http://bit.ly/1AXaiG4" >Brian Gilstrap's blog post</a>
      */
     private class FastaLineIterator implements Iterator<String> {
@@ -136,16 +137,15 @@ public class FastaParser implements Iterable<String> {
 
         private void advance() {
             try {
-                line = br.readLine();
+                do {
+                    line = br.readLine();
+                    if (line == null && br != null) {
+                        br.close();
+                        break;
+                    }
+                } while (line.startsWith(">") || line.equals(""));
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            if (line == null && br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
 
