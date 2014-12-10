@@ -63,8 +63,8 @@ public class EventPublisher {
     }
 
     /**
-     * Wraps a GalileoEvent inside an EventContainer, and places the container
-     * inside a GalileoMessage, ready to be transmitted across the network.
+     * Wraps a MendelEvent inside an EventContainer, and places the container
+     * inside a MendelMessage, ready to be transmitted across the network.
      */
     public static MendelMessage wrapEvent(Event event)
             throws IOException {

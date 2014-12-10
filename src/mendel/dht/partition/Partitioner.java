@@ -31,7 +31,7 @@ import mendel.network.NetworkInfo;
 import mendel.network.NodeInfo;
 
 /**
- * This provides an abstract implementation of a Galileo Partitioner, which
+ * This provides an abstract implementation of a Mendel Partitioner, which
  * determines where all information is distributed in the system.
  *
  * @author malensek

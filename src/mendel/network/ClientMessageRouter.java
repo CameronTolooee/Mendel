@@ -44,7 +44,7 @@ import java.util.logging.Logger;
  */
 public class ClientMessageRouter extends MessageRouter {
 
-    protected static final Logger logger = Logger.getLogger("galileo");
+    protected static final Logger logger = Logger.getLogger("mendel");
 
     protected Map<NetworkDestination, SocketChannel> destinationToSocket
             = new HashMap<>();

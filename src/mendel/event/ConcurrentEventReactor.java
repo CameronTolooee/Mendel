@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  */
 public class ConcurrentEventReactor extends EventReactor {
 
-    private static final Logger logger = Logger.getLogger("galileo");
+    private static final Logger logger = Logger.getLogger("mendel");
 
     private boolean running;
     private int poolSize;

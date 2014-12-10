@@ -46,7 +46,7 @@ import mendel.network.NodeInfo;
  * 
  */
 public class NetworkConfig {
-    private static final Logger logger = Logger.getLogger("galileo");
+    private static final Logger logger = Logger.getLogger("mendel");
 
     public static final int DEFAULT_PORT = 5555;
     public static final String NODES_FILE_NAME = "nodes";

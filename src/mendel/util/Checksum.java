@@ -38,7 +38,7 @@ import java.util.logging.Logger;
  */
 public class Checksum {
 
-    private static final Logger logger = Logger.getLogger("galileo");
+    private static final Logger logger = Logger.getLogger("mendel");
 
     private MessageDigest md;
 

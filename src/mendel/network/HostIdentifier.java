@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  */
 public class HostIdentifier {
 
-    private static final Logger logger = Logger.getLogger("galileo");
+    private static final Logger logger = Logger.getLogger("mendel");
 
     /**
      * Retrieves the short host name of the current host.
@@ -64,7 +64,7 @@ public class HostIdentifier {
     }
 
     /**
-     * Retrieve a Galileo session identifier.  This is 128 bits of randomness,
+     * Retrieve a Mendel session identifier.  This is 128 bits of randomness,
      * the StorageNode hostname, and a port number.
      */
     public static String getSessionID(int port) {
