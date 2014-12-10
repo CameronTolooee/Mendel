@@ -108,7 +108,9 @@ public class FileUploadTest implements MessageListener {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args)
+            throws IOException, SerializationException, InterruptedException {
+
         if (args.length < 3) {
             System.out.println("usage: mendel.test.FileUploadTest " +
                     "hostname port filename");
@@ -123,5 +125,11 @@ public class FileUploadTest implements MessageListener {
         while (lineIterator.hasNext()) {
             client.store(lineIterator.next());
         }
+        Thread.sleep(1000);
+
+        /* Exact matching query */
+        client.query("TTTTGATGATGTAGCTCAAAAAATTAATGCGATGATTTTT" +
+                     "AGCTAATTAAAAATTTTATACATCGAAATATTACATTTCA");
+        client.disconnect();
     }
 }
