@@ -41,11 +41,10 @@
     <target name="compile">
         <mkdir dir="${classes.dir}" />
 	 <javac srcdir="${src.dir}"
-                destdir="${build.dir}"
+                destdir="${classes.dir}"
                 classpathref="classpath"
                 debug="on"
                 includeantruntime="false">
-            <compilerarg value="-Xlint"/>
         </javac>    
 
     </target>
