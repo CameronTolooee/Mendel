@@ -38,3 +38,5 @@ conf/nodes.5
 conf/nodes.50
 forms_rt.jar
 conf/nodes.kill
+src/mendel/client/Client.java
+src/mendel/client/QueryForm.form
