@@ -25,30 +25,46 @@ package mendel.comm;
 import java.io.IOException;
 
 import mendel.event.Event;
-import mendel.query.ExactQuery;
+import mendel.query.SimilarityQuery;
 import mendel.serialize.SerializationException;
 import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
 
 /**
- * Defines a (Exact) query between {@link mendel.dht.StorageNode}s.
+ * Defines an internal {@link mendel.query.SimilarityQuery} between {@link
+ * mendel.dht
+ * .StorageNode}s.
  *
  * @author ctolooee
  */
 public class QueryEvent implements Event {
-    private ExactQuery query;
+    private SimilarityQuery query;
     private String queryID;
 
-    public QueryEvent(ExactQuery query, String queryID) {
+    /**
+     * Constructs a QueryEvent with the given SimilarityQuery and ID.
+     * @param query the SimilarityQuery to be processed
+     * @param queryID the unique global id for this query
+     */
+    public QueryEvent(SimilarityQuery query, String queryID) {
         this.query = query;
         this.queryID = queryID;
     }
 
-    public ExactQuery getQuery() {
+    /**
+     * Returns the SimilarityQuery that describes this Event.
+     * @return the SimilarityQuery contained in the Event
+     */
+    public SimilarityQuery getQuery() {
         return query;
     }
 
 
+    /**
+     * Returns the query's unique id string. This can be used to track
+     * queries throughout the system.
+     * @return the query's unique ID
+     */
     public String getQueryID() {
         return queryID;
     }
@@ -56,7 +72,7 @@ public class QueryEvent implements Event {
     @Deserialize
     public QueryEvent(SerializationInputStream in)
             throws IOException, SerializationException {
-        query = new ExactQuery(in);
+        query = new SimilarityQuery(in);
         queryID = in.readString();
     }
 
