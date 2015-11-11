@@ -26,7 +26,7 @@
 package mendel.comm;
 
 import mendel.event.Event;
-import mendel.fs.Block;
+import mendel.query.QueryResult;
 import mendel.serialize.ByteSerializable;
 import mendel.serialize.SerializationException;
 import mendel.serialize.SerializationInputStream;
@@ -38,20 +38,27 @@ import java.util.List;
 
 public class QueryResponse implements ByteSerializable, Event {
 
-    List<Block> response;
-    String queryID;
+    List<QueryResult> response;
+    String queryID, query;
+    public long count;
 
-    public QueryResponse(List<Block> response, String queryID) {
+    public QueryResponse(List<QueryResult> response, String queryID,
+                         long count, String query) {
         this.response = response;
         this.queryID = queryID;
-
+        this.count = count;
+        this.query = query;
     }
 
     public String getQueryID() {
         return queryID;
     }
 
-    public List<Block> getResponse() {
+    public String getQuery() {
+        return query;
+    }
+
+    public List<QueryResult> getResponse() {
         return response;
     }
 
@@ -62,17 +69,21 @@ public class QueryResponse implements ByteSerializable, Event {
         int size = in.readInt();
         response = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            response.add(new Block(in));
+            response.add(new QueryResult(in));
         }
         queryID = in.readString();
+        count = in.readLong();
+        query = in.readString();
     }
 
     @Override
     public void serialize(SerializationOutputStream out) throws IOException {
         out.writeInt(response.size());
-        for (Block block : response) {
+        for (QueryResult block : response) {
             out.writeSerializable(block);
         }
         out.writeString(queryID);
+        out.writeLong(count);
+        out.writeString(query);
     }
 }

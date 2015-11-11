@@ -27,6 +27,10 @@ package mendel.comm;
 
 import mendel.event.EventMap;
 
+/**
+ * Contains the mappings of Mendel event identifiers to the classes and vise
+ * versa.
+ */
 public class MendelEventMap extends EventMap {
     public MendelEventMap() {
         addMapping(100, StorageEvent.class);

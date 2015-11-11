@@ -25,6 +25,9 @@
 
 package mendel.data.parse;
 
+import mendel.vptree.types.ProteinSequence;
+import mendel.vptree.types.Sequence;
+
 import java.io.*;
 import java.util.Iterator;
 
@@ -41,14 +44,16 @@ import java.util.Iterator;
 public class FastaParser implements Iterable<String> {
 
     private BufferedReader reader;
+    private String fileName;
 
     /**
      * Constructs a FASTA file parser over the {@link java.io.InputStream}.
      *
      * @param in the input stream over the fasta file to parse
      */
-    public FastaParser(InputStream in) {
+    public FastaParser(InputStream in, String fileName) {
         reader = new BufferedReader(new InputStreamReader(in));
+        this.fileName = fileName;
     }
 
     /**
@@ -61,7 +66,7 @@ public class FastaParser implements Iterable<String> {
      *                               be opened for reading.
      */
     public FastaParser(File file) throws FileNotFoundException {
-        this(new BufferedInputStream(new FileInputStream(file)));
+        this(new BufferedInputStream(new FileInputStream(file)), file.getName());
     }
 
     /**
@@ -95,7 +100,11 @@ public class FastaParser implements Iterable<String> {
      * @return the FastaRecordIterator
      */
     public Iterator<FastaRecord> recordIterator() {
-        return new FastaRecordIterator();
+        return new FastaRecordIterator(reader);
+    }
+
+    public Iterator<ProteinSequence> windowIterator() {
+        return new FastaWindowIterator(reader);
     }
 
 
@@ -171,17 +180,129 @@ public class FastaParser implements Iterable<String> {
 
     }
 
-    private class FastaRecordIterator implements Iterator<FastaRecord> {
+    private class FastaWindowIterator implements Iterator<ProteinSequence> {
+        private BufferedReader br;
+        private ProteinSequence line;
+        private int windowSize, position;
+        private FastaRecordIterator recordIterator;
+        private FastaRecord currentRecord;
+
+        public FastaWindowIterator(BufferedReader br) {
+            this(br, 100);
+        }
+
+
+        public FastaWindowIterator(BufferedReader br, int windowSize) {
+            this.br = br;
+            this.windowSize = windowSize;
+            if (br == null) {
+                throw new NullPointerException();
+            }
+            this.recordIterator = new FastaRecordIterator(br);
+            if (recordIterator.hasNext()) {
+                currentRecord = recordIterator.next();
+            } else {
+                throw new NullPointerException("Invalid fasta format");
+            }
+            this.position = 0;
+            advance();
+        }
+
 
         @Override
         public boolean hasNext() {
-            return false;
+            return line != null;
+        }
+
+        @Override
+        public ProteinSequence next() {
+            ProteinSequence result = this.line;
+            advance();
+            return result;
+        }
+
+        private void advance() {
+            if ((position + windowSize+1) > currentRecord.getSequence().length()) {
+                if (recordIterator.hasNext()) {
+                    currentRecord = recordIterator.next();
+                } else {
+                    line = null;
+                    return;
+                }
+            }
+            line = new ProteinSequence(currentRecord.getSequence().substring(position, position + windowSize));
+            line.setSequenceLength(currentRecord.length());
+            line.setSequenceID(currentRecord.toString());
+            line.setSequencePos(position++);
+        }
+
+        /**
+         * NOT SUPPORTED
+         */
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private class FastaRecordIterator implements Iterator<FastaRecord> {
+        private BufferedReader br;
+        private String line;
+        private FastaRecord record;
+        private boolean finished = false;
+
+        public FastaRecordIterator(BufferedReader br) {
+            this.br = br;
+            record = new FastaRecord(fileName);
+            if (br == null) {
+                throw new NullPointerException();
+            }
+            advance();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return record != null;
         }
 
         @Override
         public FastaRecord next() {
-            return null;
+            FastaRecord result = this.record;
+            record = null;
+            if (!finished) {
+                advance();
+            }
+            return result;
         }
+
+        private void advance() {
+            try {
+                do {
+                    line = br.readLine();
+                    if (line == null && br != null) {
+                        br.close();
+                        return;
+                    }
+                } while (!line.startsWith(">"));
+
+                record = new FastaRecord(fileName);
+                record.setContigName(line);
+
+                line = br.readLine();
+                do {
+                    record.appendSequence(line);
+                    line = br.readLine();
+                    if (line == null && br != null) {
+                        br.close();
+                        finished = true;
+                        break;
+                    }
+                } while (!line.equals("") || !line.startsWith(">"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
 
         /**
          * NOT SUPPORTED
@@ -194,36 +315,52 @@ public class FastaParser implements Iterable<String> {
 
     public static class FastaRecord {
 
-        private String name;
+        private String fileName;
+        private String contigName;
         private String sequence;
 
-        public FastaRecord() {
+        public FastaRecord(String fileName) {
+            this.fileName = fileName;
+            this.contigName= "";
+            this.sequence = "";
         }
 
         public FastaRecord(FastaRecord record) {
-            this.name = record.getName();
+            this.fileName = record.getFileName();
+            this.contigName = record.getContigName();
             this.sequence = record.getSequence();
         }
 
-        public void copy(FastaRecord record) {
-            this.name = record.getName();
-            this.sequence = record.getSequence();
+        public int length() {
+            return sequence.length();
         }
 
-        public void setName(String name) {
-            this.name = name;
+        public void setContigName(String name) {
+            this.contigName = name;
         }
 
         public void setSequence(String sequence) {
             this.sequence = sequence;
         }
 
-        public String getName() {
-            return name;
+        public String getContigName() {
+            return contigName;
+        }
+
+        public void appendSequence(String seq) {
+            this.sequence += seq;
         }
 
         public String getSequence() {
             return sequence;
+        }
+
+        public String toString() {
+            return fileName + ":" + contigName;
+        }
+
+        public String getFileName() {
+            return fileName;
         }
     }
 }
