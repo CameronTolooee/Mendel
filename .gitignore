@@ -14,6 +14,7 @@ classes
 depcache
 build.properties
 config.properties
+conf
 
 # data files
 data
@@ -36,3 +37,4 @@ conf/nodes.40
 conf/nodes.5
 conf/nodes.50
 forms_rt.jar
+conf/nodes.kill
