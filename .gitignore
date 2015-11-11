@@ -9,7 +9,7 @@
 .idea
 Mendel.iml
 
-# Local dev files
+# Local development files
 classes
 depcache
 build.properties
@@ -26,3 +26,13 @@ docs/api
 
 # Binaries
 lib/Mendel-?.?.jar
+
+# Benchmarkng configuration files
+conf/killAll.sh
+conf/nodes.10
+conf/nodes.15
+conf/nodes.20
+conf/nodes.40
+conf/nodes.5
+conf/nodes.50
+forms_rt.jar
