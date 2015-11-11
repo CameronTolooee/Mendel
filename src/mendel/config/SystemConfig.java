@@ -45,6 +45,7 @@ public class SystemConfig {
     private static final Logger logger = Logger.getLogger("mendel");
     private static final String DEFAULT_HOMEDIR = ".";
     private static final String DEFAULT_STOREDIR = "/tmp/fs-mendel";
+    private static final int DEFAULT_WINDOW_SIZE = 30;
 
     /** Storage root */
     private static String rootDir;
@@ -57,6 +58,12 @@ public class SystemConfig {
 
     /** Flag for determining whether to write out files */
     private static boolean psuedoFS;
+
+    /** Directory containing the fasta files used to initialize vp hash tree */
+    private static String stagedDataDir;
+
+    /** Sliding window for data indexing and retrieval */
+    private static int windowSize = 30; // TODO create cofig property for this
 
     /**
      * Retrieves the system root directory. This directory is where Mendel
@@ -88,6 +95,22 @@ public class SystemConfig {
      */
     public static boolean getPseudoFS() {
         return psuedoFS;
+    }
+
+
+    /**
+     * Retrieves directory containing the fasta files used to populate
+     * the initial vantage point hashing tree.
+     */
+    public static String getStagedDataDir() {
+        return stagedDataDir;
+    }
+
+    /**
+     * Retrieves the system-wide window size for indexing and querying data
+     */
+    public static int getWindowSize() {
+        return windowSize;
     }
 
     /**
@@ -143,6 +166,15 @@ public class SystemConfig {
         if(psuedoFS) {
             logger.info("PsuedoFS mode enabled");
         }
+
+        String staged = prop.getProperty("staged.data.dir");
+        if (staged == null || staged.equals("")) {
+            logger.warning("Property staged.data.dir not defined");
+            staged = homeDir.charAt(homeDir.length() - 1) == '/' ? homeDir
+                    + "data/staged/" : homeDir + "/data/staged/";
+        }
+        stagedDataDir = staged;
+        logger.info("Staged data directory set to: " + stagedDataDir);
     }
 
     /**
