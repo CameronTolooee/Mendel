@@ -23,16 +23,26 @@ software, even if advised of the possibility of such damage.
 package mendel.dht;
 
 import mendel.event.EventContext;
+import mendel.query.QueryResult;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Tracks query id's to it's originating source while being passed around the
- * system.
+ * system. Also maintains query metadata such as intermediate results and sub-
+ * query counters to ensure synchronization of responses.
  *
  * @author ctolooee
  */
 public class QueryTracker {
 
     private static final Object counterLock = new Object();
+    private final Object sendRecvLock = new Object();
+    private final Object resultsLock = new Object();
+
+    private List<QueryResult> results;
+    private int sendRecvCount;
     private static long queryCounter = 0;
     private long queryId;
     private EventContext context;
@@ -41,7 +51,31 @@ public class QueryTracker {
         synchronized (counterLock) {
             this.queryId = QueryTracker.queryCounter++;
         }
+        synchronized(sendRecvLock) {
+            sendRecvCount = 0;
+        }
+        this.results = new ArrayList<>();
         this.context = context;
+    }
+
+    public void incrementSendRecvCount() {
+        synchronized (sendRecvLock) {
+            ++sendRecvCount;
+        }
+    }
+
+    public void decrementSendRecvCount() {
+        synchronized (sendRecvLock) {
+            --sendRecvCount;
+        }
+    }
+
+    public int getSendRecvCount() {
+        int retval = -1;
+        synchronized (sendRecvLock) {
+            retval = sendRecvCount;
+        }
+        return retval;
     }
 
     public long getQueryId() {
@@ -54,5 +88,15 @@ public class QueryTracker {
 
     public EventContext getContext() {
         return context;
+    }
+
+    public void addResults(List<QueryResult> response) {
+        synchronized (resultsLock) {
+            results.addAll(response);
+        }
+    }
+
+    public List<QueryResult> getResults() {
+        return results;
     }
 }

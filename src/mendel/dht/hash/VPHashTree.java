@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,53 +26,117 @@
 package mendel.dht.hash;
 
 import mendel.data.Metadata;
-import mendel.vptree.Kmer;
+import mendel.vptree.VPPoint;
 import mendel.vptree.VPTree;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Random;
 
-public class VPHashTree implements HashFunction<Metadata> {
+public class VPHashTree extends VPTree<VPPoint>
+        implements HashFunction<Metadata> {
 
-    private Random random = new Random();
-    private VPTree<Kmer> tree;
+    /* tree height to draw the cutoff */
+    int depth;
 
-    public VPHashTree() {
-        this.tree = new VPTree<>();
+    /* No lookup can be performed until the depth is reached */
+    private boolean depthReached;
+
+    /**
+     * Constructs a new, empty vp-tree with a default node capacity.
+     */
+    public VPHashTree(int depth) {
+        super(DEFAULT_BIN_SIZE);
+        this.depth = depth;
+        this.depthReached = false;
     }
 
-
-    public VPHashTree(VPTree<Kmer> tree) {
-        this.tree = tree;
+    /**
+     * Constructs a new, empty vp-tree with the specified node capacity.
+     *
+     * @param depth         height of the tree where to draw the cutoff for
+     *                      hashing paths
+     * @param nodeCapacity  the maximum number of points to store in a leaf node
+     *                      of the vp-tree
+     */
+    public VPHashTree(int depth, int nodeCapacity) {
+        super(nodeCapacity);
+        this.depth = depth;
+        this.depthReached = false;
     }
 
-    public long lookup(Kmer value) throws HashException {
-        long retval = tree.getPrefixOf(value);
-        if (retval < 0) {
-            if((retval = tree.add(value)) < 0) {
-                throw new HashException("Cannot add " + value + "to VPTree");
-            }
-        }
+    /**
+     * Constructs a new vp-tree that contains (and indexes) all of the points in
+     * the given collection. Nodes of the vp-tree are created with a default
+     * capacity.
+     *
+     * @param depth     height of the tree where to draw the cutoff for
+     *                  hashing paths
+     * @param points    the points to use to populate this vp-tree
+     */
+    public VPHashTree(int depth, Collection<? extends VPPoint> points) {
+        super(points, DEFAULT_BIN_SIZE);
+        this.depth = depth;
+        this.depthReached = false;
+    }
+
+    /**
+     * Constructs a new vp-tree that contains (and indexes) all of the points in
+     * the given collection and has leaf nodes with the given point capacity.
+     *
+     * @param depth         height of the tree where to draw the cutoff for
+     *                      hashing paths
+     * @param points        the points to use to populate this vp-tree
+     * @param nodeCapacity  the largest number of points any leaf node of the
+     */
+    public VPHashTree(int depth, ArrayList<? extends VPPoint> points,
+                      int nodeCapacity) {
+        super(points, nodeCapacity);
+        this.depth = depth;
+        this.depthReached = false;
+    }
+
+    /**
+     * Finds the prefix value in the hash tree of the specified @code{VPPoint}.
+     * @param value the value to find a prefix for
+     * @return  the prefix of the node where the value exists.
+     * @throws HashException    when the tree does not contain enough nodes to
+     *                          reach the depth threshold
+     */
+    public long lookup(VPPoint value) throws HashException {
+        long retval = getPrefixOf(value, depth);
         return retval;
     }
 
+    /**
+     * Hashes the metadata in the tree.
+     * @param metadata  the @code{Metadata} containing the @code{VPPoint} to get
+     *                  a hash value for
+     * @return  the SHA-1 hash of the prefix of the specified @code{VPPoint}
+     * @throws HashException    when the tree does not contain enough nodes to
+     *                          reach the depth threshold
+     */
     @Override
     public BigInteger hash(Metadata metadata) throws HashException {
-        Kmer data = new Kmer(metadata.getSeqBlock());
-        return BigInteger.valueOf(lookup(data));
+        SHA1 SHA1hash = new SHA1();
+        VPPoint value = metadata.getSequence();
+        long prefix = lookup(value);
+        return SHA1hash.hash(prefix);
     }
 
     @Override
     public BigInteger maxValue() {
-        return BigInteger.valueOf(Long.MAX_VALUE);
+        return new SHA1().maxValue();
     }
 
     @Override
     public BigInteger randomHash() throws HashException {
+        Random random = new Random();
         return BigInteger.valueOf(random.nextLong());
     }
 
     public String getHashTreeDOT() {
-        return tree.generateDot();
+        return generateDot();
     }
 }

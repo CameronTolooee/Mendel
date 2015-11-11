@@ -28,25 +28,24 @@ package mendel.test;
 import mendel.client.EventPublisher;
 import mendel.comm.*;
 import mendel.data.Metadata;
-import mendel.data.parse.FastaParser;
 import mendel.event.BasicEventWrapper;
 import mendel.fs.Block;
-import mendel.network.*;
+import mendel.network.ClientMessageRouter;
+import mendel.network.MendelMessage;
+import mendel.network.MessageListener;
+import mendel.network.NetworkDestination;
 import mendel.query.SimilarityQuery;
 import mendel.query.QueryResult;
 import mendel.serialize.SerializationException;
 import mendel.util.PerformanceTimer;
-import mendel.util.ProgressBar;
-import mendel.vptree.types.ProteinSequence;
+import mendel.vptree.Kmer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
-public class FileUploadTest implements MessageListener {
+public class NearestNeighborQueryTest implements MessageListener {
 
+    static PerformanceTimer pt = new PerformanceTimer("Nearest neighbor query");
 
     private String server;
     private int port;
@@ -54,7 +53,7 @@ public class FileUploadTest implements MessageListener {
     private static MendelEventMap eventMap = new MendelEventMap();
     private static BasicEventWrapper wrapper = new BasicEventWrapper(eventMap);
 
-    public FileUploadTest(String server, int port) throws IOException {
+    public NearestNeighborQueryTest(String server, int port) throws IOException {
         this.server = server;
         this.port = port;
         messageRouter = new ClientMessageRouter();
@@ -67,30 +66,21 @@ public class FileUploadTest implements MessageListener {
 
     public void query(String queryString) throws IOException, SerializationException {
         NetworkDestination dest = new NetworkDestination(server, port);
-        SimilarityQuery query = new SimilarityQuery(queryString, queryString);
+        SimilarityQuery query = new SimilarityQuery(queryString);
         QueryRequest qr = new QueryRequest(query, "test query");
         MendelMessage message = EventPublisher.wrapEvent(qr);
         messageRouter.sendMessage(dest, message);
     }
 
-    public void store(String seq) throws IOException {
-        String uuid = UUID.nameUUIDFromBytes(seq.getBytes()).toString();
-        Metadata meta = new Metadata(new ProteinSequence(seq), uuid);
-        Block block = new Block(meta, seq.getBytes());
+    public void store(Kmer seq) throws IOException {
+        String uuid = UUID.nameUUIDFromBytes(seq.toString().getBytes()).toString();
+        Metadata meta = new Metadata(seq, uuid);
+        Block block = new Block(meta, seq.toString().getBytes());
         store(block);
     }
 
     public void store(Block block) throws IOException {
         NetworkDestination dest = new NetworkDestination(server, port);
-        StorageRequest sr = new StorageRequest(block);
-        MendelMessage message = EventPublisher.wrapEvent(sr);
-        messageRouter.sendMessage(dest, message);
-    }
-
-    public void store(ProteinSequence seq, NetworkDestination dest) throws IOException {
-        String uuid = UUID.nameUUIDFromBytes(seq.toString().getBytes()).toString();
-        Metadata meta = new Metadata(seq, uuid);
-        Block block = new Block(meta, seq.toString().getBytes());
         StorageRequest sr = new StorageRequest(block);
         MendelMessage message = EventPublisher.wrapEvent(sr);
         messageRouter.sendMessage(dest, message);
@@ -110,61 +100,36 @@ public class FileUploadTest implements MessageListener {
     public void onMessage(MendelMessage message) {
         try {
             QueryResponse response = (QueryResponse) wrapper.unwrap(message);
-            System.out.println(response.getResponse().size()
-                    + " results received");
+           // pt.stopAndPrint();
+            //System.out.println(response.getResponse().size()
+            //        + " results received");
+            Kmer initalQuery = new Kmer(queryString);
             for (QueryResult block : response.getResponse()) {
-                System.out.println(block);
+                System.out.println(block.getValue().formatedOutput(initalQuery));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    static String queryString;
+
     public static void main(String[] args)
             throws IOException, SerializationException, InterruptedException {
 
         if (args.length < 3) {
             System.out.println("usage: mendel.test.FileUploadTest " +
-                    "hostname port filename");
+                    "hostname port queryString");
             System.exit(1);
         }
         String hostname = args[0];
         int port = Integer.parseInt(args[1]);
+        queryString = args[2];
 
-        FileUploadTest client = new FileUploadTest(hostname, port);
-        FastaParser parser = new FastaParser(args[2]);
-
-        List<NetworkDestination> list = new ArrayList<>();
-        list.add(new NetworkDestination("lattice-0", 5555));
-        list.add(new NetworkDestination("lattice-1", 5555));
-        list.add(new NetworkDestination("lattice-2", 5555));
-        list.add(new NetworkDestination("lattice-3", 5555));
-        list.add(new NetworkDestination("lattice-4", 5555));
-        list.add(new NetworkDestination("lattice-5", 5555));
-        list.add(new NetworkDestination("lattice-6", 5555));
-        list.add(new NetworkDestination("lattice-7", 5555));
-        list.add(new NetworkDestination("lattice-8", 5555));
-        list.add(new NetworkDestination("lattice-9", 5555));
-        list.add(new NetworkDestination("lattice-10", 5555));
-        list.add(new NetworkDestination("lattice-11", 5555));
-        list.add(new NetworkDestination("lattice-12", 5555));
-        list.add(new NetworkDestination("lattice-13", 5555));
-        list.add(new NetworkDestination("lattice-14", 5555));
-
-        ProgressBar pb = new ProgressBar(1062814, "Uploading file");
-        int count = 0;
-        PerformanceTimer pt = new PerformanceTimer("Upload content");
-        Iterator<ProteinSequence> windowIterator = parser.windowIterator();
+        NearestNeighborQueryTest client =
+                new NearestNeighborQueryTest(hostname, port);
         pt.start();
-        while (windowIterator.hasNext()) {
-            pb.update(++count);
-            client.store(windowIterator.next(), list.get(count % list.size()));
-        }
-        pt.stopAndPrint();
-        pb.finish();
-			
-			Thread.sleep(3000);
-		
-        client.disconnect();
+        /* Nearest neighbor  query */
+        client.query(queryString);
     }
 }

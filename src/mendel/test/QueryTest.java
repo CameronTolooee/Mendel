@@ -28,7 +28,8 @@ package mendel.test;
 import mendel.data.Metadata;
 import mendel.fs.Block;
 import mendel.fs.MendelFileSystem;
-import mendel.query.ExactQuery;
+import mendel.query.SimilarityQuery;
+import mendel.vptree.Kmer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,14 +41,14 @@ public class QueryTest {
         List<Block> blocks = new ArrayList<>();
 
         MendelFileSystem fs =
-                new MendelFileSystem("C:\\Users\\Ctolooee\\Desktop\\fs");
+                new MendelFileSystem("/home/ctolooee/fs");
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             blocks.add(generateBlock());
         }
         String seq = "CCCCCCCCC";
         String uuid = UUID.nameUUIDFromBytes(seq.getBytes()).toString();
-        Metadata meta = new Metadata(seq, uuid);
+        Metadata meta = new Metadata(new Kmer(seq), uuid);
         blocks.add(new Block(meta, seq.getBytes()));
 
         /* Insert the blocks */
@@ -58,10 +59,13 @@ public class QueryTest {
         }
 
         /* Execute some queries */
-        ExactQuery q = new ExactQuery("CCCCCCCCC");
+        SimilarityQuery q = new SimilarityQuery("CCCCCCCCC");
         System.out.println("Query: " + q);
-        Block result = fs.query(q);
-        System.out.println(result.getMetadata().getName());
+        List<Kmer> results = fs.nearestNeighboQquery(q);
+
+        for (Kmer result : results) {
+            System.out.println(result);
+        }
 
         fs.shutdown();
     }
@@ -73,7 +77,7 @@ public class QueryTest {
         for (int i = 0; i < 9; i++) {
             sequence += chars[rand.nextInt(4)];
         }
-        Metadata meta = new Metadata(sequence,
+        Metadata meta = new Metadata(new Kmer(sequence),
                 UUID.nameUUIDFromBytes(sequence.getBytes()).toString());
         return new Block(meta, sequence.getBytes());
     }

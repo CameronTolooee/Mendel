@@ -33,28 +33,21 @@ import mendel.dht.hash.HashException;
 import mendel.dht.hash.HashTopologyException;
 import mendel.dht.partition.PartitionException;
 import mendel.dht.partition.PartitionerException;
-import mendel.dht.partition.SHA1Partitioner;
 import mendel.dht.partition.VPHashPartitioner;
-import mendel.event.Event;
-import mendel.event.EventContext;
-import mendel.event.EventException;
-import mendel.event.EventHandler;
-import mendel.event.EventReactor;
+import mendel.event.*;
 import mendel.fs.Block;
 import mendel.fs.FileSystemException;
 import mendel.fs.MendelFileSystem;
-import mendel.network.ClientConnectionPool;
-import mendel.network.HostIdentifier;
-import mendel.network.NetworkInfo;
-import mendel.network.NodeInfo;
-import mendel.network.ServerMessageRouter;
+import mendel.network.*;
+import mendel.query.SimilarityQuery;
+import mendel.query.QueryResult;
 import mendel.serialize.SerializationException;
 import mendel.util.Version;
+import mendel.vptree.types.ProteinSequence;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,8 +62,10 @@ public class StorageNode implements Node {
     private int port;
     private String sessionId;
     private String rootDir;
+    private int windowSize;
     private VPHashPartitioner partitioner;
     private File pidFile;
+    private long timer;
 
     private ClientConnectionPool connectionPool;
     private MendelEventMap eventMap = new MendelEventMap();
@@ -82,11 +77,16 @@ public class StorageNode implements Node {
     public StorageNode() {
         this.port = NetworkConfig.DEFAULT_PORT;
         this.rootDir = SystemConfig.getRootDir();
+        this.windowSize = SystemConfig.getWindowSize();
         this.sessionId = HostIdentifier.getSessionID(port);
         String pid = System.getProperty("pidFile");
         if (pid != null) {
             this.pidFile = new File(pid);
         }
+    }
+
+    public StorageNode(boolean debug) {
+        System.out.println("Debugging and testing: " + debug);
     }
 
     /**
@@ -99,6 +99,8 @@ public class StorageNode implements Node {
         try {
             node.init();
         } catch (Exception e) {
+            logger.log(Level.SEVERE, "StorageNode failed to start.", e);
+        } catch (PartitionException e) {
             logger.log(Level.SEVERE, "StorageNode failed to start.", e);
         }
     }
@@ -113,7 +115,7 @@ public class StorageNode implements Node {
     public void init() throws IOException, EventException,
             InterruptedException, SerializationException,
             HashException, HashTopologyException,
-            PartitionerException, FileSystemException {
+            PartitionerException, FileSystemException, PartitionException {
         Version.printSplash();
 
         /*
@@ -142,10 +144,19 @@ public class StorageNode implements Node {
         connectionPool.addListener(eventReactor);
         partitioner = new VPHashPartitioner(this, network);
 
+        /* Stage data for the vantage point hashing tree */
+        try {
+            partitioner.stageData();
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Unable to stage data into the vp hash" +
+                    "tree", e);
+            return;
+        }
         /* Start listening for incoming messages. */
         messageRouter = new ServerMessageRouter();
         messageRouter.addListener(eventReactor);
         messageRouter.listen(port);
+
 
         System.out.println("Listening... ");
 
@@ -177,8 +188,13 @@ public class StorageNode implements Node {
                 pidFile.delete();
             }
 
+            try {
+                fileSystem.shutdown();
+            } catch (Exception e) {
+                logger.log(Level.WARNING, "Unable to flush index to disk", e);
+            }
             System.out.println("Goodbye!");
-            System.out.println(partitioner.getMetadataTreeDOT());
+            // System.out.println(partitioner.getMetadataTreeDOT());
         }
     }
 
@@ -188,9 +204,9 @@ public class StorageNode implements Node {
      */
     @EventHandler
     public void handleQueryRequest(QueryRequest request, EventContext context)
-            throws IOException, SerializationException {
-
-        String queryString = request.getQueryString();
+            throws IOException, SerializationException, PartitionException, HashException {
+        timer = System.currentTimeMillis();
+        String queryString = request.getQuery().getQuerySequence();
 
         /* Add query to tracker */
         QueryTracker tracker = new QueryTracker(context);
@@ -200,40 +216,105 @@ public class StorageNode implements Node {
 
         /* Determine StorageNodes that contain relevant data. */
         List<NodeInfo> queryNodes = new ArrayList<>();
-
-        /* TODO: For now just forward to all the nodes */
-        queryNodes.addAll(network.getAllNodes());
-
-        QueryEvent query = new QueryEvent(request.getQuery(), queryID);
-        for (NodeInfo node : queryNodes) {
-            sendEvent(node, query);
+        List<String> subsequences = new ArrayList<>();
+        long distributionTime = System.nanoTime();
+        int jump = windowSize / 2;
+        for (int i = 0; i < (queryString.length() - windowSize); i = i + jump) {
+            String subsequence = queryString.substring(i, i + windowSize);
+            subsequences.add(subsequence);
         }
+
+        //for (String seq : subsequences) {
+        //     NodeInfo node = partitioner.locateData(new Metadata(new Sequence(seq),
+        //             request.getQueryID()));
+
+        for (NodeInfo node : network.getAllNodes()) {
+            sendEvent(node, new QueryEvent(new SimilarityQuery(subsequences,
+                    queryString), queryID));
+            tracker.incrementSendRecvCount();
+        }
+
+        //  }
+        distributionTime = System.nanoTime() - distributionTime;
+        System.out.printf("Distribution Time: %f\n",
+                distributionTime / 1000000000.0);
     }
 
     /**
      * Performs the query versus the data on this Node and replies the results
      * back to the sender.
-     *
      */
     @EventHandler
     public void handleQuery(QueryEvent request, EventContext context)
             throws IOException, SerializationException {
+        List<QueryResult> queryResults = new ArrayList<>();
+        long start = System.nanoTime();
+        for (String subsequence : request.getQuery().getSequenceSegments()) {
 
-/* TODO Queries with no results should still reply stating no results found */
+            long NNTime = System.nanoTime();
 
-        Block response = fileSystem.query(request.getQuery());
+            List<ProteinSequence> resultsNN = fileSystem.nearestNeighboQuery(
+                    subsequence);
 
-        if (response != null) {
-            logger.log(Level.INFO, "Handling query {0}", request.getQueryID());
-            List<Block> list = new ArrayList<>();
-            list.add(response);
-            QueryResponse queryResponse = new QueryResponse(list,
+            NNTime = System.nanoTime() - NNTime;
+            System.out.printf("NN Time %f\n",
+                    NNTime / 1000000000.0);
+
+            /* filter out low scoring results */
+            queryResults.addAll(evaluateNNResults(resultsNN, subsequence));
+
+            NNTime = System.nanoTime() - NNTime;
+            System.out.printf("Filter Time %f\n",
+                    NNTime / 1000000000.0);
+
+
+//            resultsNN.forEach(result -> {
+//                ProteinSequence query = new ProteinSequence(
+//                        request.getQuery().getQuerySequence());
+//
+//                ProteinSequence value = new ProteinSequence(result);
+//                queryResults.add(new QueryResult(query, value));
+//            });
+
+        }
+        if (queryResults.size() > 0) {
+            logger.log(Level.INFO, "Handling query {0}",
                     request.getQueryID());
-
+            QueryResponse queryResponse = new QueryResponse(queryResults,
+                    request.getQueryID(),
+                    fileSystem.countBlocks(),
+                    request.getQuery().getQuerySequence());
             context.sendReply(queryResponse);
         } else {
+            /* Respond saying we found nothing */
+            QueryResponse queryResponse = new QueryResponse(
+                    new ArrayList<QueryResult>(),
+                    request.getQueryID(),
+                    fileSystem.countBlocks(),
+                    request.getQuery().getQuerySequence());
+
+            context.sendReply(queryResponse);
             logger.log(Level.INFO, "Query response is null");
         }
+        start = System.nanoTime() - start;
+        System.out.printf("Total Node Time %f\n",
+                start / 1000000000.0);
+    }
+
+    private List<QueryResult> evaluateNNResults(List<ProteinSequence> resultsNN,
+                                                String query) {
+        List<QueryResult> queryResults = new ArrayList<>();
+        for (ProteinSequence sequence : resultsNN) {
+            ProteinSequence querySeq = new ProteinSequence(query);
+            double distance = sequence.getDistanceTo(querySeq);
+            int maxDistance = sequence.getWord().length() * 5;
+            if (distance < maxDistance) {
+                QueryResult result = new QueryResult(querySeq, sequence);
+                queryResults.add(result);
+            }
+
+        }
+        return queryResults;
     }
 
     /**
@@ -249,9 +330,81 @@ public class StorageNode implements Node {
 
         /* Get query destination from tracker */
         QueryTracker tracker = queryTrackers.get(response.getQueryID());
+        System.out.println("Got response #" + tracker.getSendRecvCount()
+                + " from " + context.getSource());
+        /* Forward the response to the client after all results are received */
+        tracker.decrementSendRecvCount();
+        /* TODO Add a timeout to for query results */
+        tracker.addResults(response.getResponse());
+        if (tracker.getSendRecvCount() == 0) {
+            System.out.printf("Total NN timer: %f s\n", timer / 1000000000.0);
+            List<QueryResult> finalEvaluation = evaluateFinalResults(tracker);
+            tracker.getContext().sendReply(new QueryResponse(finalEvaluation,
+                    response.getQueryID(), 1, response.getQuery()));
+        }
+    }
 
-        /* Forward the response to the client */
-        tracker.getContext().sendReply(response);
+    private List<QueryResult> evaluateFinalResults(QueryTracker tracker) {
+        timer = System.nanoTime();
+        HashMap<String, List<QueryResult>> map = new HashMap<>();
+        List<QueryResult> resultList = new ArrayList<>();
+        System.out.println("Got " + tracker.getResults().size());
+        System.out.println("------ FINDING HSM'S ------");
+        for (QueryResult result : tracker.getResults()) {
+                /* High scoring match --> hash */
+            String matchID = result.getValue().getSequenceID();
+            List<QueryResult> tmp = map.get(matchID);
+            if (tmp != null) {
+                tmp.add(result);
+            } else {
+                ArrayList<QueryResult> list = new ArrayList<>();
+                list.add(result);
+                map.put(matchID, list);
+            }
+        }
+        System.out.println("\n------ ITERATING HSM'S ------");
+        for (List<QueryResult> queryResults : map.values()) {
+
+            /* Sort high scoring matches by position on the contig */
+            Collections.sort(queryResults, (q1, q2) -> q1.getValue()
+                    .getSequencePos() - q2.getValue().getSequencePos());
+
+            if (queryResults.size() > 10) {
+                String queryMatch = queryResults.get(0).getValue().toString();
+                int initalPos = queryResults.get(0).getValue().getSequencePos();
+
+
+                System.out.println("list size: " + queryResults.size());
+
+                /* Loop through sorted results, find gaps */
+//                System.out.println("------ FINDING GAPS ------");
+//                for (int i = 0; i < queryResults.size() - 1; i++) {
+//                    /* compare position[i] and position[i+1] for significant gaps */
+//                    int pos1 = queryResults.get(i).getValue().getSequencePos();
+//                    int pos2 = queryResults.get(i + 1).getValue().getSequencePos();
+//
+//                /* TODO make threshold user configurable */
+//                    if ((pos2 - pos1) > 100) {
+//                        // exclude the match somehow
+//                        break;
+//                    } else {
+//                        String match = queryResults.get(i + 1).toString();
+//                        /* Grab the last characters from the next match */
+//                        queryMatch += match.substring(match.length() - (pos2 - pos1));
+//                    }
+//                }
+                ProteinSequence matchingSequence = new ProteinSequence(queryResults.get(0).getValue().getWholeSequece());
+                matchingSequence.setSequenceID(queryResults.get(0).getValue().getSequenceID());
+                matchingSequence.setSequencePos(initalPos);
+                matchingSequence.setSequenceID(queryResults.get(0).getValue().getSequenceID());
+
+                resultList.add(new QueryResult(tracker.getResults().get(0).getQuery(), matchingSequence));
+            }
+        }
+        System.out.println("FOUND: " + resultList.size());
+        timer = System.nanoTime() - timer;
+        System.out.printf("Merge timer: %f s\n", timer / 1000000000.0);
+        return resultList;
     }
 
     /**
@@ -266,19 +419,31 @@ public class StorageNode implements Node {
 
         /* Determine where this block goes */
         Block file = request.getBlock();
-        Metadata metadata = file.getMetadata();
+        List<Metadata> dataList = file.getMetadata();
+        List<byte[]> rawDataList = file.getData();
 
-        NodeInfo node = partitioner.locateData(metadata);
-
-        logger.log(Level.INFO, "Storage destination: {0}", node);
-        StorageEvent store = new StorageEvent(file);
-        sendEvent(node, store);
+        HashMap<NodeInfo, Block> sequences = new HashMap<>();
+        for (int i = 0; i < dataList.size(); ++i) {
+            Metadata metadata = dataList.get(i);
+            byte[] rawData = rawDataList.get(i);
+            NodeInfo node = partitioner.locateData(metadata);
+            Block entry = sequences.get(node);
+            if (entry == null) {
+                Block block = new Block(metadata, rawData);
+                sequences.put(node, block);
+            } else {
+                entry.addData(metadata, rawData);
+            }
+        }
+        for (Map.Entry<NodeInfo, Block> entry : sequences.entrySet()) {
+            StorageEvent store = new StorageEvent(entry.getValue());
+            sendEvent(entry.getKey(), store);
+        }
     }
 
     @EventHandler
     public void handleStorage(StorageEvent store, EventContext context)
             throws FileSystemException, IOException {
-        logger.log(Level.INFO, "Storing block: {0}", store.getBlock());
         fileSystem.storeBlock(store.getBlock());
     }
 

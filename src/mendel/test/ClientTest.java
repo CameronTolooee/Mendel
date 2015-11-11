@@ -29,14 +29,15 @@ import mendel.client.EventPublisher;
 import mendel.comm.*;
 import mendel.data.Metadata;
 import mendel.event.BasicEventWrapper;
-import mendel.event.EventWrapper;
 import mendel.fs.Block;
 import mendel.network.ClientMessageRouter;
 import mendel.network.MendelMessage;
 import mendel.network.MessageListener;
 import mendel.network.NetworkDestination;
-import mendel.query.ExactQuery;
+import mendel.query.SimilarityQuery;
+import mendel.query.QueryResult;
 import mendel.serialize.SerializationException;
+import mendel.vptree.types.ProteinSequence;
 
 import java.io.IOException;
 import java.util.Random;
@@ -68,17 +69,17 @@ public class ClientTest implements MessageListener {
 
     public void query(String queryString) throws IOException, SerializationException {
         NetworkDestination dest = new NetworkDestination(server, port);
-        ExactQuery query = new ExactQuery(queryString);
+        SimilarityQuery query = new SimilarityQuery(queryString, queryString);
         QueryRequest qr = new QueryRequest(query, "test query");
         QueryEvent qe = new QueryEvent(query, "test query");
         MendelMessage message = EventPublisher.wrapEvent(qr);
         messageRouter.sendMessage(dest, message);
     }
 
-    public void store(String seq) throws IOException {
-        String uuid = UUID.nameUUIDFromBytes(seq.getBytes()).toString();
+    public void store(ProteinSequence seq) throws IOException {
+        String uuid = UUID.nameUUIDFromBytes(seq.toString().getBytes()).toString();
         Metadata meta = new Metadata(seq, uuid);
-        Block block = new Block(meta, seq.getBytes());
+        Block block = new Block(meta, seq.toString().getBytes());
         store(block);
     }
 
@@ -96,7 +97,7 @@ public class ClientTest implements MessageListener {
         for (int i = 0; i < 9; i++) {
             sequence += chars[rand.nextInt(4)];
         }
-        Metadata meta = new Metadata(sequence,
+        Metadata meta = new Metadata(new ProteinSequence(sequence),
                 UUID.nameUUIDFromBytes(sequence.getBytes()).toString());
         return new Block(meta, sequence.getBytes());
     }
@@ -117,8 +118,8 @@ public class ClientTest implements MessageListener {
             QueryResponse response = (QueryResponse) wrapper.unwrap(message);
             System.out.println(response.getResponse().size()
                     + " results received");
-            for (Block block : response.getResponse()) {
-                System.out.println(block.getMetadata().getSeqBlock());
+            for (QueryResult block : response.getResponse()) {
+                System.out.println(block.getValue());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,7 +136,7 @@ public class ClientTest implements MessageListener {
 
         ClientTest client = new ClientTest(server, port);
 
-        client.store("CCCCCCCCC");
+        client.store(new ProteinSequence("CCCCCCCCC"));
         Thread.sleep(1000);
 
 

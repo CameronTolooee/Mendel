@@ -24,6 +24,11 @@
  */
 
 package mendel.vptree;
+import mendel.serialize.ByteSerializable;
+import mendel.serialize.SerializationInputStream;
+import mendel.serialize.SerializationOutputStream;
+
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -33,92 +38,87 @@ import java.util.List;
 import java.util.Set;
 
 
-public class VPTree<E extends VPPoint> {
+public class VPTree<E extends VPPoint> implements ByteSerializable {
 
     /**
-     * The default node capacity ({@value} points) for nodes in this vptree.
+     * The default node capacity ({@value} points) for nodes in this vp-tree.
      */
     public static final int DEFAULT_BIN_SIZE = 32;
 
-    private final int binSize;
+    protected final int binSize;
 
-    private VPNode<E> root;
+    protected VPNode<E> root;
 
     /**
-     * Constructs a new, empty vp-vptree with a default node capacity.
+     * Constructs a new, empty vp-tree with a default node capacity.
      */
     public VPTree() {
         this(DEFAULT_BIN_SIZE);
     }
 
     /**
-     * Constructs a new, empty vp-vptree with the specified node capacity.
+     * Constructs a new, empty vp-tree with the specified node capacity.
      *
      * @param nodeCapacity  the maximum number of points to store in a leaf node
-     *                        of the vptree
+     *                        of the vp-tree
      */
     public VPTree(int nodeCapacity) {
         if(nodeCapacity < 1) {
             throw new IllegalArgumentException("Node capacity must be " +
                     "greater than zero.");
         }
-
+        this.root = new VPNode<E>(nodeCapacity, 1, 0);
         this.binSize = nodeCapacity;
-        this.root = new VPNode<>(binSize, 1);
     }
 
     /**
-     * Constructs a new vp-vptree that contains (and indexes) all of the points in
-     * the given collection. Nodes of the vptree are created with a default
+     * Constructs a new vp-tree that contains (and indexes) all of the points in
+     * the given collection. Nodes of the vp-tree are created with a default
      * capacity.
      *
      * @param points
-     *            the points to use to populate this vptree
+     *            the points to use to populate this vp-tree
      */
     public VPTree(Collection<E> points) {
         this(points, DEFAULT_BIN_SIZE);
     }
 
     /**
-     * Constructs a new vp-vptree that contains (and indexes) all of the points in
+     * Constructs a new vp-tree that contains (and indexes) all of the points in
      * the given collection and has leaf nodes with the given point capacity.
      *
-     * @param points  the points to use to populate this vptree
+     * @param points  the points to use to populate this vp-tree
      * @param nodeCapacity  the largest number of points any leaf node of the
-     *                        vptree should contain
+     *                        vp-tree should contain
      */
-    public VPTree(Collection<E> points, int nodeCapacity) {
+    public VPTree(Collection<? extends VPPoint> points, int nodeCapacity) {
         if(nodeCapacity < 1) {
             throw new IllegalArgumentException("Node capacity must be" +
                     " greater than zero.");
         }
-
         this.binSize = nodeCapacity;
 
         if(!points.isEmpty()) {
-            @SuppressWarnings("unchecked")
             E[] pointArray = points.toArray((E[])Array.newInstance(
                     points.iterator().next().getClass(), 0));
 
             this.root = new VPNode<>(pointArray, 0, pointArray.length,
-                    this.binSize, 1);
-        } else {
-            this.root = new VPNode<>(this.binSize, 1);
+                    this.binSize, 1, 0);
         }
     }
 
     /**
-     * Returns a reference to this vptree's root node. This method is intended for
+     * Returns a reference to this vp-tree's root node. This method is intended for
      * testing purposes only.
      *
-     * @return a reference to this vptree's root node
+     * @return a reference to this vp-tree's root node
      */
-    protected VPNode<E> getRoot() {
+    public VPNode<E> getRoot() {
         return this.root;
     }
 
     /**
-     * Returns the maximum number of points any leaf node of this vptree should
+     * Returns the maximum number of points any leaf node of this vp-tree should
      * contain.
      *
      * @return the maximum number of points any leaf node should contain
@@ -128,13 +128,13 @@ public class VPTree<E extends VPPoint> {
     }
 
     /**
-     * Adds a single point to this vp-vptree. Addition of a point executes in
+     * Adds a single point to this vp-tree. Addition of a point executes in
      * O(log n) time in the best case (where n is the number of points in the
-     * vptree), but may also trigger a node partition that takes additional time.
+     * vp-tree), but may also trigger a node partition that takes additional time.
      *
-     * @param point  the point to add to this vptree
+     * @param point  the point to add to this vp-tree
      *
-     * @return {@code true} if the vptree was modified by the addition of this
+     * @return {@code true} if the vp-tree was modified by the addition of this
      *         point; vp-trees are always modified by adding points, so this
      *         method always returns true
      */
@@ -143,11 +143,11 @@ public class VPTree<E extends VPPoint> {
     }
 
     /**
-     * Adds all of the points in the given collection to this vp-vptree.
+     * Adds all of the points in the given collection to this vp-tree.
      *
-     * @param points  the points to add to this vptree
+     * @param points  the points to add to this vp-tree
      *
-     * @return {@code true} if the vptree was modified by the addition of the
+     * @return {@code true} if the vp-tree was modified by the addition of the
      *         points; vp-trees are always modified by adding points, so this
      *         method always returns true
      */
@@ -156,20 +156,20 @@ public class VPTree<E extends VPPoint> {
     }
 
     /**
-     * Removes all points from this vp-vptree. Clearing a vp-vptree executes in O(1)
+     * Removes all points from this vp-tree. Clearing a vp-tree executes in O(1)
      * time.
      */
     public void clear() {
-        this.root = new VPNode<>(this.binSize, 1);
+        this.root = null;
     }
 
     /**
-     * Tests whether this vp-vptree contains the given point. Membership tests
-     * execute in O(log n) time, where n is the number of points in the vptree.
+     * Tests whether this vp-tree contains the given point. Membership tests
+     * execute in O(log n) time, where n is the number of points in the vp-tree.
      *
-     * @param o  the object to test for membership in this vptree
+     * @param o  the object to test for membership in this vp-tree
      *
-     * @return {@code true} if this vptree contains the given point or
+     * @return {@code true} if this vp-tree contains the given point or
      *         {@code false} otherwise
      */
     @SuppressWarnings("unchecked")
@@ -182,14 +182,14 @@ public class VPTree<E extends VPPoint> {
     }
 
     /**
-     * Tests whether this vp-vptree contains all of the points in the given
+     * Tests whether this vp-tree contains all of the points in the given
      * collection. Group membership tests execute in O(m log n) time, where m is
      * the number of points in the given collection and n is the number of
-     * points in the vptree.
+     * points in the vp-tree.
      *
-     * @param c  the collection of points to test for membership in this vptree
+     * @param c  the collection of points to test for membership in this vp-tree
      *
-     * @return {@code true} if this vptree contains all of the members of the
+     * @return {@code true} if this vp-tree contains all of the members of the
      *         given collection or {@code false} otherwise
      */
     public boolean containsAll(Collection<?> c) {
@@ -200,17 +200,27 @@ public class VPTree<E extends VPPoint> {
         return true;
     }
 
-    public long getPrefixOf(Kmer value) {
+    @Deprecated
+    public long getPrefixOf(E value) {
         if(size() < 1) {
+            System.out.println("Empty tree");
             return -1;
         }
         return root.getPrefixOf(value);
     }
 
+    public long getPrefixOf(E value, int depth) {
+        if(size() < 1) {
+            System.out.println("Empty tree");
+            return -1;
+        }
+        return root.getPrefixOf(value, depth);
+    }
+
     /**
-     * Tests whether this vptree is empty.
+     * Tests whether this vp-tree is empty.
      *
-     * @return {@code true} if this vptree contains no points or {@code false}
+     * @return {@code true} if this vp-tree contains no points or {@code false}
      *         otherwise
      */
     public boolean isEmpty() {
@@ -219,12 +229,12 @@ public class VPTree<E extends VPPoint> {
 
 
     /**
-     * Removes a point from this vptree.
+     * Removes a point from this vp-tree.
      *
      * @param o  the point to remove
      *
-     * @return {@code true} if the vptree was modified by removing this point
-     *         (i.e. if the point was present in the vptree) or {@code false}
+     * @return {@code true} if the vp-tree was modified by removing this point
+     *         (i.e. if the point was present in the vp-tree) or {@code false}
      *         otherwise
      */
     public boolean remove(Object o) {
@@ -241,7 +251,7 @@ public class VPTree<E extends VPPoint> {
     }
 
     /**
-     * Removes a point from this vptree and optionally defers pruning of nodes
+     * Removes a point from this vp-tree and optionally defers pruning of nodes
      * left empty after the removal of their last point. If pruning is deferred,
      * it is the responsibility of the caller to prune nodes after this method
      * has executed.
@@ -257,8 +267,8 @@ public class VPTree<E extends VPPoint> {
      *            removal of points; this may be {@code null} if
      *            {@code deferPruning} is {@code false}
      *
-     * @return {@code true} if the vptree was modified by removing this point
-     *         (i.e. if the point was present in the vptree) or {@code false}
+     * @return {@code true} if the vp-tree was modified by removing this point
+     *         (i.e. if the point was present in the vp-tree) or {@code false}
      *         otherwise
      */
     protected boolean remove(E point, boolean deferPruning,
@@ -282,13 +292,13 @@ public class VPTree<E extends VPPoint> {
     }
 
     /**
-     * Removes all of the points in the given collection from this vptree.
+     * Removes all of the points in the given collection from this vp-tree.
      *
      * @param c
      *            the collection of points to remove from this true
      *
-     * @return {@code true} if the vptree was modified by removing the given
-     *         points (i.e. if any of the points were present in the vptree) or
+     * @return {@code true} if the vp-tree was modified by removing the given
+     *         points (i.e. if any of the points were present in the vp-tree) or
      *         {@code false} otherwise
      */
     public boolean removeAll(Collection<?> c) {
@@ -300,16 +310,16 @@ public class VPTree<E extends VPPoint> {
                 @SuppressWarnings("unchecked")
                 E point = (E)o;
 
-                // The behavioral contact for Collections states, "After this
-                // call returns, this collection will contain no elements in
-                // common with the specified collection." Make sure we remove
-                // all instances of each point in the collection of points to
-                // remove.
+                /* The behavioral contact for Collections states, "After this
+                 call returns, this collection will contain no elements in
+                 common with the specified collection." Make sure we remove
+                 all instances of each point in the collection of points to
+                 remove. */
                 while(this.remove(point, true, nodesToPrune)) {
                     anyChanged = true;
                 }
             } catch(ClassCastException e) {
-                /* The object wasn't the kind of point contained in this vptree */
+                /* The object wasn't the kind of point contained in this vp-tree */
             }
         }
 
@@ -347,18 +357,18 @@ public class VPTree<E extends VPPoint> {
     }
 
     /**
-     * "Prunes" an empty leaf node from the vptree. When a node is pruned, its
+     * "Prunes" an empty leaf node from the vp-tree. When a node is pruned, its
      * parent absorbs the points from both of its child nodes (though only one
      * may actually contain points) and discards its child nodes. If the parent
      * node is empty after the absorption of its child nodes, it is also pruned;
      * this process continues until either an ancestor of the original node is
-     * non-empty after absorbing its children or until the root of the vptree is
-     * reached.
+     * non-empty after absorbing its children or until the root of the vp-tree
+     * is reached.
      * <p>
      * The pruning process may leave an ancestor node overly-full, in which
      * case it is the responsibility of the caller to repartition that node.
      *
-     * @param node the empty node to prune from the vptree
+     * @param node the empty node to prune from the vp-tree
      */
     protected void pruneEmptyNode(VPNode<E> node) {
         /* Only spend time working on this if the node is actually empty; it's
@@ -386,19 +396,19 @@ public class VPTree<E extends VPPoint> {
     }
 
     /**
-     * Returns the total number of points stored in this vp-vptree.
+     * Returns the total number of points stored in this vp-tree.
      *
-     * @return the number of points stored in this vp-vptree
+     * @return the number of points stored in this vp-tree
      */
     public int size() {
         return this.root.size();
     }
 
     /**
-     * Returns an array containing all of the points in this vp-vptree. The order
+     * Returns an array containing all of the points in this vp-tree. The order
      * of the points in the array is not defined.
      *
-     * @return an array containing all of the points in this vp-vptree
+     * @return an array containing all of the points in this vp-tree
      */
     public Object[] toArray() {
         Object[] array = new Object[this.size()];
@@ -409,26 +419,26 @@ public class VPTree<E extends VPPoint> {
 
     @SuppressWarnings("unchecked")
     /**
-     * Returns an array containing all of the points in this vp-vptree; the
+     * Returns an array containing all of the points in this vp-tree; the
      * runtime type of the returned array is that of the specified array. If the
      * collection fits in the specified array, it is returned therein.
      * Otherwise, a new array is allocated with the runtime type of the
      * specified array and the size of this collection.
      * <p>
-     * If all of the points in this vptree fit in the specified array with room
-     * to spare (i.e., the array has more elements than this vp-vptree), the
+     * If all of the points in this vp-tree fit in the specified array with room
+     * to spare (i.e., the array has more elements than this vp-tree), the
      * element in the array immediately following the end of the collection is
      * set to {@code null}
      *
      * @param a
-     *            the array into which the elements of this vptree are to be
+     *            the array into which the elements of this vp-tree are to be
      *            stored, if it is big enough; otherwise, a new array of the
      *            same runtime type is allocated for this purpose
      *
-     * @return an array containing all of the points in this vp-vptree
+     * @return an array containing all of the points in this vp-tree
      */
     public <T> T[] toArray(T[] a) {
-        int size = this.size();
+        int size = this.size();     
 
         if(a.length < this.size()) {
             return (T[]) Arrays.copyOf(this.toArray(), size, a.getClass());
@@ -462,4 +472,15 @@ public class VPTree<E extends VPPoint> {
         return dot;
     }
 
+    @Override
+    public void serialize(SerializationOutputStream out) throws IOException {
+        out.writeInt(binSize);
+        out.writeSerializable(root);
+    }
+
+    @Deserialize
+    public VPTree(SerializationInputStream in) throws IOException {
+        this.binSize = in.readInt();
+        this.root = new VPNode<>(in);
+    }
 }

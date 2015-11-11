@@ -1,6 +1,8 @@
 package mendel.test;
 
 import mendel.data.parse.FastaParser;
+import mendel.vptree.types.ProteinSequence;
+import mendel.vptree.types.Sequence;
 
 import java.io.FileNotFoundException;
 import java.util.Iterator;
@@ -15,12 +17,7 @@ public class FastaParserTest {
         }
 
         FastaParser parser = new FastaParser(args[0]);
-        Iterator<String> lineIterator = parser.lineIterator();
-        while (lineIterator.hasNext()) {
-            System.out.println(lineIterator.next());
-        }
-
-        Iterator<FastaParser.FastaRecord> contigParser = parser.recordIterator();
+        Iterator<ProteinSequence> contigParser = parser.windowIterator();
         while (contigParser.hasNext()) {
             System.out.println("----------------------------------------");
             System.out.println(contigParser.next());

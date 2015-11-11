@@ -23,53 +23,57 @@
  * possibility of such damage.
  */
 
-package mendel.vptree;
+package mendel.vptree.types;
 
 
 import mendel.serialize.ByteSerializable;
 import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
 import mendel.util.SmithWaterman;
+import mendel.vptree.VPPoint;
 
 import java.io.IOException;
 
 /**
- * Implementation of a Kmer as a point in a {@link mendel.vptree.VPTree}.
+ * Implementation of a Sequence as a point in a {@link mendel.vptree.VPTree}.
  *
  * @author ctolooee
  */
-public class Kmer implements VPPoint, ByteSerializable {
+public class Sequence implements VPPoint, ByteSerializable {
 
-    public String word, sequenceID;
-    private int sequenceLength, sequencePos, length;
+    protected String word, sequenceID, wholeSequece;
+    protected int sequenceLength, sequencePos, length;
 
 
-    public Kmer(String word) {
+    public Sequence(String word) {
         this.word = word;
         this.length = word.length();
         this.sequenceID = "";
         this.sequencePos = -1;
         this.sequenceLength = -1;
+        this.wholeSequece = "";
     }
 
-    public Kmer(Kmer other) {
+    public Sequence(Sequence other) {
         this.word = other.word;
         this.length = word.length();
         this.sequenceID = other.sequenceID;
         this.sequencePos = other.sequencePos;
         this.sequenceLength = other.sequenceLength;
+        this.wholeSequece = other.wholeSequece;
     }
 
-    public Kmer(VPPoint center) {
-        if (!(center instanceof Kmer)) {
+    public Sequence(VPPoint center) {
+        if (!(center instanceof Sequence)) {
             throw new IllegalArgumentException();
         } else {
-            Kmer other = (Kmer) center;
+            Sequence other = (Sequence) center;
             this.word = other.word;
             this.length = word.length();
             this.sequenceID = other.sequenceID;
             this.sequencePos = other.sequencePos;
             this.sequenceLength = other.sequenceLength;
+            this.wholeSequece = other.wholeSequece;
         }
     }
 
@@ -79,11 +83,11 @@ public class Kmer implements VPPoint, ByteSerializable {
      * Calculates the Hamming distance between <code>this</code> and the
      * parameter, taking wildcard characters into account.
      *
-     * @param other  the other {@link Kmer} to compare the Hamming
+     * @param other  the other {@link Sequence} to compare the Hamming
      *                 distance to.
      */
     public double getDistanceTo(VPPoint other) {
-        String word2 = ((Kmer) other).word;
+        String word2 = ((Sequence) other).word;
         if (word == null || word2 == null) {
             throw new IllegalArgumentException("Received null argument");
         } else if (word.length() != word2.length()) {
@@ -109,13 +113,18 @@ public class Kmer implements VPPoint, ByteSerializable {
         return false;
     }
 
-    @Override
+    public String formatedOutput(Sequence query) {
+        return "";
+    }
+
+
+        @Override
     public int compareTo(VPPoint other) {
         String word2;
 
         /* Validate arguments */
-        if (other instanceof Kmer) {
-            word2 = ((Kmer) other).word;
+        if (other instanceof Sequence) {
+            word2 = ((Sequence) other).word;
         } else {
             throw new IllegalArgumentException();
         }
@@ -127,9 +136,9 @@ public class Kmer implements VPPoint, ByteSerializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Kmer kmer = (Kmer) o;
+        Sequence sequence = (Sequence) o;
 
-        return word.equals(kmer.word);
+        return word.equals(sequence.word);
 
     }
 
@@ -144,11 +153,12 @@ public class Kmer implements VPPoint, ByteSerializable {
     }
 
     @Deserialize
-    public Kmer(SerializationInputStream in) throws IOException {
+    public Sequence(SerializationInputStream in) throws IOException {
         this.word = in.readString();
         this.sequenceID = in.readString();
         this.sequenceLength = in.readInt();
         this.sequencePos = in.readInt();
+        this.wholeSequece = in.readString();
     }
 
     @Override
@@ -157,48 +167,7 @@ public class Kmer implements VPPoint, ByteSerializable {
         out.writeString(sequenceID);
         out.writeInt(sequenceLength);
         out.writeInt(sequencePos);
-    }
-
-    public String formatedOutput(Kmer query) {
-        double score = 0;
-        String output = "Sequence ID: " + sequenceID;
-        output += "\tLength: " + sequenceLength + "\n";
-        String line1 = "";
-        String line2 = "\t\t";
-        String line3 = "";
-        line1 += "Query\t0\t";
-        line3 += "Match\t" + this.sequencePos + "\t";
-        SmithWaterman sw = new SmithWaterman();
-        sw.init(query.word, this.word);
-        sw.process();
-        String seqA = sw.getmAlignmentSeqA();
-        String seqB = sw.getmAlignmentSeqB();
-        line1 += seqA;
-        line3 += seqB;
-        int count = 0;
-        for (int i = 0, j = 0; i < seqA.length(); ++i, ++j) {
-            if (seqA.charAt(i) == seqB.charAt(i)) {
-                ++count;
-                line2 += "|";
-            } else {
-                line2 += " ";
-            }
-        }
-        output += "Score: " + sw.getmScore();
-        output += "\t\tIdentities: " + count + "/" + seqA.length()
-                + "(";
-        output += String.format("%.2f", ((double) count / seqA.length()) * 100) + "%)\n";
-        line1 += "\t" + (query.length - 1);
-        line3 += "\t" + (this.sequencePos + query.word.length() - 1);
-        return output + "\n" + line1 + "\n" + line2 + "\n" + line3;
-    }
-
-    public static void main(String[] args) {
-        Kmer k1 = new Kmer("ACTGCACTGACTGCTGC");
-        Kmer k2 = new Kmer("ACTGCACTGATTGCTGC");
-
-        System.out.println(k1.formatedOutput(k2));
-
+        out.writeString(wholeSequece);
     }
 
     public void setSequencePos(int sequencePos) {
@@ -213,11 +182,31 @@ public class Kmer implements VPPoint, ByteSerializable {
         this.sequenceID = sequenceID;
     }
 
+    public String getWord() {
+        return word;
+    }
+
+    public String getSequenceID() {
+        return sequenceID;
+    }
+
     public void setSequenceLength(int length) {
         sequenceLength = length;
     }
 
     public int getSequenceLength() {
         return sequenceLength;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void setWholeSequence(String seq) {
+        this.wholeSequece = seq;
+    }
+
+    public String getWholeSequece() {
+        return wholeSequece;
     }
 }

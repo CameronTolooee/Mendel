@@ -25,6 +25,10 @@ software, even if advised of the possibility of such damage.
 
 package mendel.dht.hash;
 
+import mendel.data.Metadata;
+import mendel.vptree.types.ProteinSequence;
+import mendel.vptree.types.Sequence;
+
 import java.math.BigInteger;
 import java.util.TreeMap;
 
@@ -62,7 +66,9 @@ public class BalancedHashRing<T> implements HashRing<T> {
      * function will determine the size of the hash space and where nodes will
      * be placed in the topology.
      *
-     * @param function HashFunction that defines the hash space being used.
+     * @param function  HashFunction that defines the hash space being used.
+     * @param randomize true if the first node position in the hash ring is
+     *                  randomized, otherwise first node position at 0
      */
     public BalancedHashRing(HashFunction<T> function, boolean randomize) {
         this.function = function;
@@ -242,5 +248,26 @@ public class BalancedHashRing<T> implements HashRing<T> {
         } while (currentEntry != firstEntry);
 
         return str;
+    }
+
+    public static void main(String[] args) throws HashException, HashTopologyException {
+        BalancedHashRing<Metadata> ring = new BalancedHashRing<>(new SHA1());
+        for (int i = 0; i < 30; i++) {
+            ring.addNode(null);
+        }
+
+        ProteinSequence k1 = new ProteinSequence("ATATATAATTATAT");
+        ProteinSequence k2 = new ProteinSequence("ATATATAATTATAC");
+        ProteinSequence k3 = new ProteinSequence("ACATGCTGCCGAGC");
+        Metadata m1 = new Metadata(k1, "t1");
+        Metadata m2 = new Metadata(k1, "t2");
+        Metadata m3 = new Metadata(k2, "t1");
+        Metadata m4 = new Metadata(k3, "t1");
+
+        System.out.println(ring.locate(m1));
+        System.out.println(ring.locate(m2));
+        System.out.println(ring.locate(m3));
+        System.out.println(ring.locate(m4));
+
     }
 }

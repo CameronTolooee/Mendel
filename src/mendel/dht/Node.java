@@ -27,6 +27,7 @@ package mendel.dht;
 
 import mendel.dht.hash.HashException;
 import mendel.dht.hash.HashTopologyException;
+import mendel.dht.partition.PartitionException;
 import mendel.dht.partition.PartitionerException;
 import mendel.event.EventException;
 import mendel.fs.FileSystemException;
@@ -36,6 +37,6 @@ import java.io.IOException;
 
 public interface Node {
 
-    public void init() throws IOException, EventException, InterruptedException, SerializationException, HashException, HashTopologyException, PartitionerException, FileSystemException;
+    public void init() throws IOException, EventException, InterruptedException, SerializationException, HashException, HashTopologyException, PartitionerException, FileSystemException, PartitionException;
 
 }

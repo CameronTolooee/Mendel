@@ -28,6 +28,8 @@ import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The basic unit of storage in Mendel.
@@ -36,38 +38,67 @@ import java.io.IOException;
  */
 
 public class Block implements ByteSerializable {
-    private Metadata metadata;
-    private byte[] data;
+    private List<Metadata> metadata;
+    private List<byte[]> data;
 
-    public Block(byte[] data, String name) {
-        this.metadata = new Metadata(data, name);
-        this.data = data;
+    public Block(byte[] data, String name) throws IOException, SerializationException {
+        this.metadata = new ArrayList<>();
+        this.data = new ArrayList<>();
+        metadata.add(new Metadata(data, name));
+        this.data.add(data);
     }
 
     public Block(Metadata metadata, byte[] data) {
-        this.metadata = metadata;
+        this.metadata = new ArrayList<>();
+        this.data = new ArrayList<>();
+        this.metadata.add(metadata);
+        this.data.add(data);
+    }
+
+    public Block(List<Metadata> list, List<byte[]> data) {
+        this.metadata = list;
         this.data = data;
     }
+
+    public void addData(Metadata meta, byte[] data) {
+        this.metadata.add(meta);
+        this.data.add(data);
+    }
+
 
     @Deserialize
     public Block(SerializationInputStream in)
             throws IOException, SerializationException {
-        this.metadata = new Metadata(in);
-        data = in.readField();
+        this.metadata = new ArrayList<>();
+        int count = in.readInt();
+        for (int i = 0; i < count; i++) {
+            metadata.add(new Metadata(in));
+        }
+        this.data = new ArrayList<>();
+        count = in.readInt();
+        for (int i = 0; i < count; i++) {
+            data.add(in.readField());
+        }
     }
 
-    public Metadata getMetadata() {
+    public List<Metadata> getMetadata() {
         return metadata;
     }
 
-    public byte[] getData() {
+    public List<byte[]> getData() {
         return data;
     }
 
     @Override
     public void serialize(SerializationOutputStream out)
             throws IOException {
-        out.writeSerializable(metadata);
-        out.writeField(data);
+        out.writeInt(metadata.size());
+        for (Metadata meta : metadata) {
+            out.writeSerializable(meta);
+        }
+        out.writeInt(data.size());
+        for (byte[] bytes : data) {
+            out.writeField(bytes);
+        }
     }
 }

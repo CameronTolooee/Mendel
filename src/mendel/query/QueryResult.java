@@ -1,15 +1,15 @@
 /*
  * Copyright (c) 2014, Colorado State University All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer. 2. Redistributions in
  * binary form must reproduce the above copyright notice, this list of
  * conditions and the following disclaimer in the documentation and/or other
  * materials provided with the distribution.
- * 
+ *
  * This software is provided by the copyright holders and contributors "as is"
  * and any express or implied warranties, including, but not limited to, the
  * implied warranties of merchantability and fitness for a particular purpose
@@ -23,51 +23,66 @@
  * possibility of such damage.
  */
 
-/**
- *
- *
- * @author ctolooee
- */
-package mendel.data;
+package mendel.query;
 
-import mendel.serialize.*;
-import mendel.vptree.types.ProteinSequence;
+import mendel.serialize.ByteSerializable;
+import mendel.serialize.SerializationInputStream;
+import mendel.serialize.SerializationOutputStream;
 import mendel.vptree.types.Sequence;
 
 import java.io.IOException;
 
-public class Metadata implements ByteSerializable {
+public class QueryResult implements ByteSerializable {
 
-    //TODO Add to this as we figure it out what formats we have for meta
-    private String name;
-    private ProteinSequence sequence;
+    private Sequence query, value;
+    private double identityScore, consecScore;
 
-    public Metadata(ProteinSequence sequence, String name) {
-        this.sequence = sequence;
-        this.name = name;
+    public QueryResult(Sequence query, Sequence value) {
+        this.query = query;
+        this.value = value;
     }
 
-    public Metadata(byte[] data, String name) throws IOException, SerializationException {
-        this.sequence = Serializer.deserialize(ProteinSequence.class, data);
-        this.name = name;
+    public double getIdentityScore() {
+        return identityScore;
     }
 
-    public Metadata(SerializationInputStream in) throws IOException {
-        this.sequence = new ProteinSequence(in);
-        this.name = in.readString();
+    public void setIdentityScore(double identityScore) {
+        this.identityScore = identityScore;
+    }
+
+    public double getConsecScore() {
+        return consecScore;
+    }
+
+    public void setConsecScore(double consecScore) {
+        this.consecScore = consecScore;
+    }
+
+    public Sequence getValue() {
+        return value;
+    }
+
+    public Sequence getQuery() {
+        return query;
+    }
+
+    @Deserialize
+    public QueryResult(SerializationInputStream in) throws IOException {
+        query = new Sequence(in);
+        value = new Sequence(in);
+        identityScore = in.readDouble();
+        consecScore = in.readDouble();
     }
 
     @Override
     public void serialize(SerializationOutputStream out) throws IOException {
-        out.writeSerializable(sequence);
-        out.writeString(name);
+        out.writeSerializable(query);
+        out.writeSerializable(value);
+        out.writeDouble(identityScore);
+        out.writeDouble(consecScore);
     }
 
-    public ProteinSequence getSequence() {
-        return sequence;
-    }
-
-    public String getName() {
-        return name;
+    public String toString() {
+        return value.toString();
     }
 }

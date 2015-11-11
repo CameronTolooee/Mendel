@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class NetworkInfo {
 
-    private List<GroupInfo> groups = new ArrayList<GroupInfo>();
+    private List<GroupInfo> groups = new ArrayList<>();
 
     public void addGroup(GroupInfo group) {
         groups.add(group);
@@ -46,7 +46,7 @@ public class NetworkInfo {
     }
 
     public List<NodeInfo> getAllNodes() {
-        List<NodeInfo> nodeList = new ArrayList<NodeInfo>();
+        List<NodeInfo> nodeList = new ArrayList<>();
         for (GroupInfo group : groups) {
             List<NodeInfo> groupNodes = group.getAllNodes();
             nodeList.addAll(groupNodes);

@@ -1,6 +1,6 @@
 package mendel.test;
 
-import mendel.vptree.Kmer;
+import mendel.vptree.types.Sequence;
 import mendel.vptree.VPNode;
 import org.junit.After;
 import org.junit.Test;
@@ -16,19 +16,19 @@ public class VPNodeTest {
 
     @Test
     public void testNth_element() throws Exception {
-        VPNode<Kmer> test = new VPNode<>(10, 0);
+        VPNode<Sequence> test = new VPNode<>(10, 0, 0);
         /* Create list of k-mers */
-        Kmer[] array = new Kmer[7];
-        array[4] = new Kmer("AAAAAAA");
-        array[1] = new Kmer("AAAAAAC");
-        array[2] = new Kmer("AAAAACC");
-        array[5] = new Kmer("AAAACCC");
-        array[0] = new Kmer("AAACCCC");
-        array[3] = new Kmer("ACCCCCC");
-        array[6] = new Kmer("AACCCCC");
+        Sequence[] array = new Sequence[7];
+        array[4] = new Sequence("AAAAAAA");
+        array[1] = new Sequence("AAAAAAC");
+        array[2] = new Sequence("AAAAACC");
+        array[5] = new Sequence("AAAACCC");
+        array[0] = new Sequence("AAACCCC");
+        array[3] = new Sequence("ACCCCCC");
+        array[6] = new Sequence("AACCCCC");
 
         int lower = 0, upper = 6, n = array.length/2;
         test.nth_element(array, lower, upper, n, array[4]);
-        assertEquals(new Kmer("AAAACCC").toString(), array[5].toString());
+        assertEquals(new Sequence("AAAACCC").toString(), array[5].toString());
     }
 }

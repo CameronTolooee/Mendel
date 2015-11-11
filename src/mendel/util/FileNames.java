@@ -1,16 +1,13 @@
 /*
 Copyright (c) 2013, Colorado State University
 All rights reserved.
-
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
-
 1. Redistributions of source code must retain the above copyright notice, this
    list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
-
 This software is provided by the copyright holders and contributors "as is" and
 any express or implied warranties, including, but not limited to, the implied
 warranties of merchantability and fitness for a particular purpose are
@@ -23,53 +20,28 @@ any theory of liability, whether in contract, strict liability, or tort
 software, even if advised of the possibility of such damage.
 */
 
-package mendel.dht.hash;
+package mendel.util;
 
-import mendel.data.Metadata;
-import mendel.util.Checksum;
-
-import java.math.BigInteger;
-import java.util.Random;
+import java.io.File;
 
 /**
- * Provides an SHA1 HashFunction.
+ * Utility class for working with file names.
  *
  * @author malensek
  */
-public class SHA1 implements HashFunction<Metadata> {
+public class FileNames {
 
-    private Checksum checksum = new Checksum();
-    private Random random = new Random();
+    public static Pair<String, String> splitExtension(File file) {
+        String name = file.getName();
+        int lastDot = name.lastIndexOf('.');
 
-    @Override
-    public synchronized BigInteger hash(Metadata data) throws HashException {
-        return new BigInteger(1, checksum.hash(data.getSequence().toString().getBytes()));
-    }
-
-    public synchronized BigInteger hash(long data) throws HashException {
-        return new BigInteger(1, checksum.hash(longToBytes(data)));
-    }
-
-    public static byte[] longToBytes(long l) {
-        int size = Long.SIZE/Byte.SIZE;
-        byte[] result = new byte[size];
-        for (int i = size - 1; i >= 0; --i) {
-            result[i] = (byte)(l & 0xFF);
-            l >>= (Byte.SIZE);
+        if (lastDot == -1) {
+            return new Pair<>(name, "");
         }
-        return result;
-    }
 
-    @Override
-    public BigInteger maxValue() {
-        int hashBytes = checksum.getMessageDigest().getDigestLength();
-        return BigInteger.valueOf(2).pow(hashBytes * 8);
-    }
+        String pre = name.substring(0, lastDot);
+        String ext = name.substring(lastDot + 1);
 
-    @Override
-    public synchronized BigInteger randomHash() throws HashException {
-        byte[] randomBytes = new byte[1024];
-        random.nextBytes(randomBytes);
-        return new BigInteger(1, checksum.hash(randomBytes));
+        return new Pair<>(pre, ext);
     }
 }

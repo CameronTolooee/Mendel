@@ -25,11 +25,23 @@
 
 package mendel.vptree;
 
+import mendel.serialize.ByteSerializable;
+import mendel.serialize.SerializationInputStream;
+import mendel.serialize.SerializationOutputStream;
+import mendel.vptree.types.ProteinSequence;
+
+import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
- * {@code VPNodes} are the nodes of a vantage point vptree. {@code VPNodes}
+ * {@code VPNodes} are the nodes of a vantage point vp-tree. {@code VPNodes}
  * may or may not be leaf nodes; if they are leaf nodes, they have no
  * children (their child node members will be {@code null}) and they will
  * have a non-null {@code elements} member that contains all of the elements
@@ -38,7 +50,7 @@ import java.util.*;
  * Non-leaf nodes will have non-{@code null} children and contain no
  * elements of their own.
  */
-public class VPNode<T extends VPPoint> {
+public class VPNode<T extends VPPoint> implements ByteSerializable {
     private VPPoint center;
     private double threshold;
 
@@ -49,17 +61,19 @@ public class VPNode<T extends VPPoint> {
     private final int binSize;
 
     private long prefix;
+    private int depth;
 
     /**
      * Constructs a new, empty node with the given capacity.
      *
      * @param binSize the largest number of elements this node should hold
      */
-    public VPNode(int binSize, long prefix) {
+    public VPNode(int binSize, long prefix, int depth) {
         this.binSize = binSize;
         this.elements = new ArrayList<>(0);
-        this.center = null;
+        this.center = new ProteinSequence("");
         this.prefix = prefix;
+        this.depth = depth;
     }
 
     /**
@@ -75,9 +89,10 @@ public class VPNode<T extends VPPoint> {
      * @param binSize  the largest number of elements this node should hold
      */
     public VPNode(T[] elements, int lower, int upper,
-                  int binSize, long prefix) {
+                  int binSize, long prefix, int depth) {
         this.prefix = prefix;
         this.binSize = binSize;
+        this.depth = depth;
         if (upper - lower <= binSize) {
             /* All done! This is a leaf node. */
             storeElements(elements, lower, upper);
@@ -122,7 +137,7 @@ public class VPNode<T extends VPPoint> {
      * @return a new point that is coincident with this node's center point
      */
     public VPPoint getCenter() {
-        return new Kmer(center);
+        return new ProteinSequence(center);
     }
 
     /**
@@ -137,7 +152,6 @@ public class VPNode<T extends VPPoint> {
             throw new IllegalStateException("Leaf nodes do not have a" +
                     " distance threshold.");
         }
-
         return threshold;
     }
 
@@ -152,8 +166,10 @@ public class VPNode<T extends VPPoint> {
         return prefix;
     }
 
-    public long getPrefixOf(Kmer value) {
+    @Deprecated
+    public long getPrefixOf(T value) {
         if (isLeafNode()) {
+            // TODO Can change this to return only the prefix at a certain depth
             /* If distance from value to this center is 0, its a match! */
             for (T element : elements) {
                 if (value.getDistanceTo(element) == 0) {
@@ -167,8 +183,37 @@ public class VPNode<T extends VPPoint> {
                 return farther.getPrefixOf(value);
             }
         }
-            /* By this point we know its not in the vptree */
-            return -1;
+            /* By this point we know the exact value is not in the vp-tree
+             * so return the most recent (this) prefix */
+
+        return prefix;
+    }
+
+    public long getPrefixOf(T value, int depth) {
+
+        if(center != null) {
+        /* Are we deep enough? If not delve deeper */
+            if (depth > this.depth) {
+                if (center.getDistanceTo(value) <= threshold) {
+                    if (closer == null) {
+                        return prefix;
+                    } else {
+                        return closer.getPrefixOf(value, depth);
+                    }
+                } else {
+                    if (farther == null) {
+                        return prefix;
+                    } else {
+                        return farther.getPrefixOf(value, depth);
+                    }
+                }
+            } else {
+            /* We made it down a path deep enough */
+                return prefix;
+            }
+        } else {
+            return prefix;
+        }
     }
 
     /**
@@ -333,7 +378,7 @@ public class VPNode<T extends VPPoint> {
 
         /* Always choose a center point if there isn't one already */
         if (this.center == null && !this.elements.isEmpty()) {
-            this.center = new Kmer(this.elements.get(0));
+            this.center = new ProteinSequence(this.elements.get(0));
         }
 
         this.closer = null;
@@ -394,10 +439,10 @@ public class VPNode<T extends VPPoint> {
      * @param upper    the end index of the sub-array of elements to partition
      *                 (exclusive)
      * @throws PartitionException if the range specified by {@code lower} and
-     *                            {@code upper} includes fewer than two elements or if no
-     *                            viable distance threshold could be found (i.e. all of the
-     *                            elements in the subarray have the same distance from this
-     *                            node's center point)
+     *                            {@code upper} includes fewer viable distance
+     *                            threshold could be found (i.e. all of the
+     *                            elements in the subarray have the same
+     *                            distance from this node's center point)
      */
     protected void partition(T[] elements, int lower,
                              int upper) throws PartitionException {
@@ -408,8 +453,8 @@ public class VPNode<T extends VPPoint> {
         }
 
         /* Choose a center point and distance threshold (the median distance) */
-        if (center == null) {
-            center = new Kmer(elements[lower]);
+        if (center == null || ((ProteinSequence) center).getWord().equals("")) {
+            center = new ProteinSequence(elements[lower]);
         }
 
         /* Find the median element with selection algorithm at the middle pos */
@@ -468,9 +513,9 @@ public class VPNode<T extends VPPoint> {
 
         /* Partition the array */
         closer = new VPNode<>(elements, lower,
-                partitionIndex, binSize, leftPrefix);
+                partitionIndex, binSize, leftPrefix, this.depth + 1);
         farther = new VPNode<>(elements, partitionIndex,
-                upper, binSize, rightPrefix);
+                upper, binSize, rightPrefix, this.depth + 1);
 
         /* No longer a leaf nodes */
         this.elements = null;
@@ -730,15 +775,17 @@ public class VPNode<T extends VPPoint> {
      * <strong>in place</strong> and therefore will modify the elements array.
      *
      * @param elements the array to perform the selection algorithm on
-     * @param lower    the lower bound (inclusive) of the range to be partitioned
-     * @param upper    the upper bound (inclusive) of the range to be partitioned
+     * @param lower    the lower bound (inclusive) of the range to be
+     *                 partitioned
+     * @param upper    the upper bound (inclusive) of the range to be
+     *                 partitioned
      * @param n        the position to partition around
      * @return the index of the n'th element
      */
     public int nth_element(T[] elements, int lower,
                            int upper, int n, VPPoint vp) {
 
-        if (elements == null || upper <= n || lower >= n) {
+        if (elements == null || upper < n || lower > n) {
             throw new IllegalArgumentException();
         }
         int medianDist = (int) elements[n].getDistanceTo(vp);
@@ -746,7 +793,7 @@ public class VPNode<T extends VPPoint> {
             while (elements[lower].getDistanceTo(vp) < medianDist) {
                 lower++;
             }
-            while (elements[upper - 1].getDistanceTo(vp) > medianDist) {
+            while (elements[upper].getDistanceTo(vp) > medianDist) {
                 upper--;
             }
             if (lower <= upper) {
@@ -763,29 +810,88 @@ public class VPNode<T extends VPPoint> {
 
     public String generateDot(int count) {
         if (isLeafNode()) {
-            if(elements.size() < 1) {
+            if (elements.size() < 1) {
                 return "";
             }
             String node = "\tstruct" + (count) + " [shape=record,label=\""
                     + Long.toBinaryString(prefix) + "| {";
-            for (int i = 0; i < elements.size() - 2; ++i) {
-                node += elements.get(i) + "|";
-            }
-            node += elements.get(size() - 1) + "}\"]\n";
+//            for (int i = 0; i < elements.size() - 2; ++i) {
+//                node += elements.get(i) + "|";
+//            }
+//            node += elements.get(size() - 1) + "}\"]\n";
+            node += elements.size() + "}\"]\n";
             return node;
         } else {
             int left = (count * 2) + 1;
             int right = left + 1;
             String node = "\tstruct" + (count) + " [label=\""
-                    + Long.toBinaryString(prefix) + "|"
-                    + center + "|"
+                    //+ Long.toBinaryString(prefix) + "|"
+                    + prefix + "|"
                     + String.valueOf(threshold) + " \"]\n";
             node += closer.generateDot(left);
             node += farther.generateDot(right);
             node += "\tstruct" + count + " -- struct" + (left) + "\n";
             node += "\tstruct" + count + " -- struct" + (right) + "\n";
             return node;
+        }
+    }
+
+    private boolean stopSerial = false;
+
+    @Override
+    public void serialize(SerializationOutputStream out) throws IOException {
+        if (stopSerial) {
+            return;
+        }
+        if (isLeafNode()) {
+            out.writeBoolean(true);
+            stopSerial = true;
+        } else {
+            out.writeBoolean(false);
+        }
+        out.writeSerializable(center);
+        out.writeDouble(threshold);
+        if (!isLeafNode()) {
+            out.writeSerializable(closer);
+            out.writeSerializable(farther);
+        }
+
+        if (elements != null) {
+            out.writeInt(elements.size());
+            for (T t : elements) {
+                out.writeSerializable(t);
+            }
+        } else {
+            out.writeInt(0);
+        }
+        out.writeInt(binSize);
+        out.writeLong(prefix);
+    }
+
+    @Deserialize
+    public VPNode(SerializationInputStream in) throws IOException {
+        boolean stop = in.readBoolean();
+        this.center = new ProteinSequence(in);
+        this.threshold = in.readDouble();
+        if (stop) {
+            closer = null;
+            farther = null;
+        } else {
+            this.closer = new VPNode<>(in);
+            this.farther = new VPNode<>(in);
 
         }
+
+        int numElements = in.readInt();
+        this.elements = new ArrayList<>();
+        for (int i = 0; i < numElements; ++i) {
+            this.elements.add((T) new ProteinSequence(in));
+        }
+        this.binSize = in.readInt();
+        this.prefix = in.readLong();
+    }
+
+    public int getDepth() {
+        return depth;
     }
 }

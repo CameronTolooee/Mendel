@@ -26,10 +26,11 @@
 package mendel.fs;
 
 import mendel.data.Metadata;
-import mendel.query.ExactQuery;
 import mendel.serialize.SerializationException;
 import mendel.serialize.Serializer;
 import mendel.util.PerformanceTimer;
+import mendel.vptree.types.ProteinSequence;
+import mendel.vptree.VPTree;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,12 +42,14 @@ import java.util.logging.Logger;
 public class MendelFileSystem implements FileSystem {
 
     private static Logger logger = Logger.getLogger("mendel");
+    private RecoveryManager recoveryManager;
     private File storageDirectory;
     private boolean readOnly;
     private boolean pseudoFS;
+    private static final String recoveryFileName = "mendel-metadata";
 
-    /* Temporary Metadata structure for exact matching queries */
-    Map<String, String> metadataMap;
+    VPTree<ProteinSequence> metadataTree;
+    long count;
 
     public MendelFileSystem(String storageRoot, boolean pseudoFS)
             throws IOException, FileSystemException {
@@ -63,12 +66,10 @@ public class MendelFileSystem implements FileSystem {
     protected void initialize(String storageRoot)
             throws FileSystemException, IOException {
         logger.info("Initializing Mendel File System.");
-        if(pseudoFS) {
+        if (pseudoFS) {
             logger.info("PsuedoFS enabled!");
         }
         logger.info("Storage directory: " + storageRoot);
-
-        metadataMap = new HashMap<>();
 
         /* Ensure the storage and file system directories exists. */
         storageDirectory = new File(storageRoot);
@@ -113,6 +114,27 @@ public class MendelFileSystem implements FileSystem {
             logger.warning("Storage directory is read-only. Starting " +
                     "file system in read-only mode.");
             readOnly = true;
+        }
+
+        recoveryManager = new RecoveryManager(storageDirectory
+                + "/" + recoveryFileName);
+
+        /* Initialize metadata vp-tree */
+        initIndex();
+    }
+
+    private void initIndex() throws IOException {
+        metadataTree = new VPTree<>();
+
+        /* Attempt to recover the index from disk */
+        metadataTree = recoveryManager.recover();
+        recoveryManager.start();
+
+        if (metadataTree == null) {
+            logger.log(Level.SEVERE, "Failed to recover path journal!");
+            recoveryManager.erase();
+            recoveryManager.start();
+            metadataTree = new VPTree<>();
         }
     }
 
@@ -224,23 +246,28 @@ public class MendelFileSystem implements FileSystem {
     @Override
     public String storeBlock(Block block)
             throws FileSystemException, IOException {
-        String name = block.getMetadata().getName();
-        if (name.equals("")) {
-            UUID blockUUID = UUID.nameUUIDFromBytes(block.getData());
-            name = blockUUID.toString();
-        }
-        String blockPath = storageDirectory + "/fs/" + name
-                + FileSystem.BLOCK_EXTENSION;
+        String blockPath = "";
+        for (int i = 0; i < block.getMetadata().size(); ++i) {
+            ++count;
+            String name = block.getMetadata().get(i).getName();
+            if (name.equals("")) {
+                UUID blockUUID = UUID.nameUUIDFromBytes(block.getData().get(i));
+                name = blockUUID.toString();
+            }
+            blockPath = storageDirectory + "/fs/" + name
+                    + FileSystem.BLOCK_EXTENSION;
 
         /* Add metadata to the in-memory map */
-        metadataMap.put(block.getMetadata().getSeqBlock(), blockPath);
+            //metadataMap.put(block.getMetadata().getSeqBlock(), blockPath);
+            metadataTree.add(block.getMetadata().get(i).getSequence());
 
         /* Don't write data to disk if pseudoFS is enabled */
-        if(!pseudoFS) {
-            byte[] blockData = Serializer.serialize(block);
-            FileOutputStream blockOutStream = new FileOutputStream(blockPath);
-            blockOutStream.write(blockData);
-            blockOutStream.close();
+            if (!pseudoFS) {
+                byte[] blockData = Serializer.serialize(block);
+                FileOutputStream blockOutStream = new FileOutputStream(blockPath);
+                blockOutStream.write(blockData);
+                blockOutStream.close();
+            }
         }
         return blockPath;
     }
@@ -281,35 +308,47 @@ public class MendelFileSystem implements FileSystem {
      * Furthermore, there is no guarantee all the shutdown operations will be
      * executed, so time is of the essence here.
      */
-    public void shutdown() {
+    public void shutdown() throws IOException, FileSystemException {
+        recoveryManager.writeIndex(metadataTree);
+    }
 
+    public List<ProteinSequence> nearestNeighboQuery(String query) {
+        /* TODO  Rename query classes to be more accurate/insightful */
+        List<ProteinSequence> result = new ArrayList<>();
+            result.addAll(nearestNeighborQuery(query));
+        return result;
+    }
+
+
+    public List<ProteinSequence> nearestNeighborQuery(String queryString) {
+        ProteinSequence sequence = new ProteinSequence(queryString);
+        return metadataTree.getNearestNeighbors(sequence, 5);
+    }
+
+    public long countBlocks() {
+        return count;
     }
 
     /**
      * Searches the root file system for the file generated by the query.
      *
-     * @param query they query containing data to generate filename
+     * @param querySequence they query containing data to generate filename
      * @return the Block of the file data if it exists; null otherwise
      * @throws IOException
      * @throws SerializationException
      */
-    public Block query(ExactQuery query)
-            throws IOException, SerializationException {
-        String path = metadataMap.get(query.getSequence());
-
-        if (path == null) {
-            return null;
-        }
-        /* If pseudoFS mode enabled, nothing on disk; rely on metadata */
-        else if(pseudoFS) {
-            return new Block(path.getBytes(), path);
-        } else {
-            File f = new File(path);
-            if (f.exists() && !f.isDirectory()) {
-                return loadBlock(path);
-            } else {
-                return null;
-            }
-        }
-    }
+//    public Block retrieveSequence(String querySequence)
+//            throws IOException, SerializationException {
+//        /* If pseudoFS mode enabled, nothing on disk; rely on metadata */
+//        if(pseudoFS) {
+//            return new Block(path.getBytes(), path);
+//        } else {
+//            File f = new File(path);
+//            if (f.exists() && !f.isDirectory()) {
+//                return loadBlock(path);
+//            } else {
+//                return null;
+//            }
+//        }
+//    }
 }

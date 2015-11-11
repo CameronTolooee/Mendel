@@ -25,74 +25,86 @@
 
 package mendel.test;
 
-import mendel.vptree.Kmer;
+import mendel.data.parse.FastaParser;
+import mendel.serialize.SerializationInputStream;
+import mendel.serialize.Serializer;
+import mendel.vptree.types.ProteinSequence;
+import mendel.vptree.types.Sequence;
 import mendel.vptree.VPTree;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * Testing correctness of vp-vptree implementation.
+ * Testing correctness of vp-tree implementation.
  *
  * @author ctolooee
  */
 public class VPTreeTest {
 
-    List<Kmer> list;
+    List<Sequence> list;
 
     @Before
     public void setup() {
 
         /* Create list of k-mers */
         list = new ArrayList<>();
-        list.add(new Kmer("ACTGCCTGA"));
-        list.add(new Kmer("ACTTCCTGA"));
-        list.add(new Kmer("ACTCCCTGA"));
-        list.add(new Kmer("AAGGCCTGA"));
-        list.add(new Kmer("GGTGCCTGA"));
-        list.add(new Kmer("CGTGATGCA"));
-        list.add(new Kmer("ACCCCCCCC"));
-        list.add(new Kmer("AAAAAAACC"));
-        list.add(new Kmer("AAAAAACCC"));
-        list.add(new Kmer("AAAAACCCC"));
-        list.add(new Kmer("AAAACCCCC"));
-        list.add(new Kmer("AAACCCCCC"));
-        list.add(new Kmer("ACCCCCCCC"));
+        list.add(new Sequence("ACTGCCTGA"));
+        list.add(new Sequence("ACTTCCTGA"));
+        list.add(new Sequence("ACTCCCTGA"));
+        list.add(new Sequence("AAGGCCTGA"));
+        list.add(new Sequence("GGTGCCTGA"));
+        list.add(new Sequence("CGTGATGCA"));
+        list.add(new Sequence("ACCCCCCCC"));
+        list.add(new Sequence("AAAAAAACC"));
+        list.add(new Sequence("AAAAAACCC"));
+        list.add(new Sequence("AAAAACCCC"));
+        list.add(new Sequence("AAAACCCCC"));
+        list.add(new Sequence("AAACCCCCC"));
+        list.add(new Sequence("ACCCCCCCC"));
     }
 
 
     @Test
-    public void testVPTree() {
+    public void testVPTree() throws IOException {
 
-        VPTree<Kmer> vpTree = new VPTree<>(list, 3);
-
-        Kmer target = new Kmer("ACCCCCCCT"); /* Matches ACCCCCCCC" */
-
-        Kmer nearestNeighbor = vpTree.getNearestNeighbor(target);
-
-        System.out.println(nearestNeighbor);
-        assertEquals(nearestNeighbor, new Kmer("ACCCCCCCC"));
-        //testDOT();
+        VPTree<ProteinSequence> vpTree = new VPTree<>(list, 3);
+        FastaParser parser = new FastaParser("data/staph-query-lines");
+        Iterator<ProteinSequence> windowIterator = parser.windowIterator();
+        while(windowIterator.hasNext()) {
+            vpTree.add(windowIterator.next());
+        }
+        FileOutputStream fOut = new FileOutputStream(new File("test.index"));
+        fOut.write(Serializer.serialize(vpTree));
+        FileInputStream fIn = new FileInputStream(new File("test.index"));
+        SerializationInputStream sIn = new SerializationInputStream(fIn);
+        VPTree<Sequence> vpTree2 = new VPTree<>(sIn);
+        System.out.println(vpTree2.size());
     }
 
     private void testDOT() {
 
-        VPTree<Kmer> vpTree = new VPTree<>(list, 3);
-        VPTree<Kmer> vpTree2 = new VPTree<>(3);
-        for (Kmer kmer : list) {
-            vpTree2.add(kmer);
+        VPTree<Sequence> vpTree = new VPTree<>(list, 3);
+        VPTree<Sequence> vpTree2 = new VPTree<>(3);
+        for (Sequence sequence : list) {
+            vpTree2.add(sequence);
         }
 
-        Kmer[] array = new Kmer[vpTree2.size()];
+        Sequence[] array = new Sequence[vpTree2.size()];
         vpTree2.toArray(array);
-        List<Kmer> list2 = Arrays.asList(array);
-        VPTree<Kmer> vpTree3 = new VPTree<>(list2, 3);
+        List<Sequence> list2 = Arrays.asList(array);
+        VPTree<Sequence> vpTree3 = new VPTree<>(list2, 3);
 
         System.out.println(vpTree.generateDot());
         System.out.println(vpTree2.generateDot());
