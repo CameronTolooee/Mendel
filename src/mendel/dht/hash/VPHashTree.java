@@ -120,7 +120,7 @@ public class VPHashTree extends VPTree<VPPoint>
     @Override
     public BigInteger hash(Metadata metadata) throws HashException {
         SHA1 SHA1hash = new SHA1();
-        VPPoint value = metadata.getSequence();
+        VPPoint value = metadata.getSegment();
         long prefix = lookup(value);
         return SHA1hash.hash(prefix);
     }

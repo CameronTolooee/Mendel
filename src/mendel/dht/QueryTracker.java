@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014, Colorado State University
+Copyright (c) 2015, Colorado State University
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tracks query id's to it's originating source while being passed around the
+ * Tracks query ids to its originating source while being passed around the
  * system. Also maintains query metadata such as intermediate results and sub-
  * query counters to ensure synchronization of responses.
  *

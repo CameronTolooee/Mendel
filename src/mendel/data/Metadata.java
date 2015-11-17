@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,50 +23,57 @@
  * possibility of such damage.
  */
 
-/**
- *
- *
- * @author ctolooee
- */
 package mendel.data;
 
 import mendel.serialize.*;
 import mendel.vptree.types.ProteinSequence;
-import mendel.vptree.types.Sequence;
 
 import java.io.IOException;
 
+/**
+ * Defines the metadata associated with a genomic segment segment.
+ *
+ * @author ctolooee
+ */
 public class Metadata implements ByteSerializable {
 
-    //TODO Add to this as we figure it out what formats we have for meta
     private String name;
-    private ProteinSequence sequence;
+    private ProteinSequence segment;
 
-    public Metadata(ProteinSequence sequence, String name) {
-        this.sequence = sequence;
+    /**
+     * Constructs a Metadata item for the specified sequence segment.
+     * @param segment the sequence segment
+     * @param name the name of the sequence from which the segment originated
+     */
+    public Metadata(ProteinSequence segment, String name) {
+        this.segment = segment;
         this.name = name;
     }
 
-    public Metadata(byte[] data, String name) throws IOException, SerializationException {
-        this.sequence = Serializer.deserialize(ProteinSequence.class, data);
-        this.name = name;
-    }
-
+    @Deserialize
     public Metadata(SerializationInputStream in) throws IOException {
-        this.sequence = new ProteinSequence(in);
+        this.segment = new ProteinSequence(in);
         this.name = in.readString();
     }
 
     @Override
     public void serialize(SerializationOutputStream out) throws IOException {
-        out.writeSerializable(sequence);
+        out.writeSerializable(segment);
         out.writeString(name);
     }
 
-    public ProteinSequence getSequence() {
-        return sequence;
+    /**
+     * Returns the sequence segment.
+     * @return the sequence segment
+     */
+    public ProteinSequence getSegment() {
+        return segment;
     }
 
+    /**
+     * Returns the name of the sequence from which the segment originates.
+     * @return the sequence segments original ID
+     */
     public String getName() {
         return name;
     }

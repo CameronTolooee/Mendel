@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,6 +23,7 @@
  * possibility of such damage.
  */
 
+
 package mendel.data;
 
 import mendel.serialize.ByteSerializable;
@@ -30,8 +31,13 @@ import mendel.serialize.SerializationOutputStream;
 
 import java.io.IOException;
 
+/**
+ * Encapsulates a DNA sequence composed of one or more {@link mendel.data
+ * .Nucleotide}s as a operable unit in Mendel.
+ *
+ * @author ctolooee
+ */
 public class DNASequence implements ByteSerializable {
-
 
     @Override
     public void serialize(SerializationOutputStream out) throws IOException {

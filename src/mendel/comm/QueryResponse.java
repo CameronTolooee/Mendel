@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,12 +36,29 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Defines an internal event to respond to queries that have been processed
+ * back to the client.
+ *
+ * @author ctolooee
+ */
 public class QueryResponse implements ByteSerializable, Event {
 
     List<QueryResult> response;
     String queryID, query;
-    public long count;
+    public long count; // FOR TESTING PURPOSES
 
+    /**
+     * Constructs a QueryResponse to the query with the specified ID.
+     * Contains the original query and query ID, as well as the response. The
+     * count parameter is used to get a segment count per node for testing
+     * purposes.
+     * @param response the list of QueryResults
+     * @param queryID the base query's ID
+     * @param count the number of segments on the storage node. This can be
+     *              set to 0 if not needed.
+     * @param query the base query
+     */
     public QueryResponse(List<QueryResult> response, String queryID,
                          long count, String query) {
         this.response = response;
@@ -50,14 +67,27 @@ public class QueryResponse implements ByteSerializable, Event {
         this.query = query;
     }
 
+    /**
+     * Returns the base query's unique ID
+     * @return the base query's ID
+     */
     public String getQueryID() {
         return queryID;
     }
 
+    /**
+     * Returns the base query.
+     * @return the base query
+     */
     public String getQuery() {
         return query;
     }
 
+    /**
+     * Returns the list of QueryResults that were created during the
+     * processing of the base query.
+     * @return the list of QueryResults
+     */
     public List<QueryResult> getResponse() {
         return response;
     }

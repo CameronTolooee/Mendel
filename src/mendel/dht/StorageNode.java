@@ -25,29 +25,53 @@
 
 package mendel.dht;
 
-import mendel.comm.*;
+import mendel.comm.MendelEventMap;
+import mendel.comm.QueryEvent;
+import mendel.comm.QueryRequest;
+import mendel.comm.QueryResponse;
+import mendel.comm.StorageEvent;
+import mendel.comm.StorageRequest;
+
 import mendel.config.NetworkConfig;
 import mendel.config.SystemConfig;
-import mendel.data.Metadata;
+
 import mendel.dht.hash.HashException;
 import mendel.dht.hash.HashTopologyException;
 import mendel.dht.partition.PartitionException;
 import mendel.dht.partition.PartitionerException;
 import mendel.dht.partition.VPHashPartitioner;
-import mendel.event.*;
+
+import mendel.event.Event;
+import mendel.event.EventContext;
+import mendel.event.EventException;
+import mendel.event.EventHandler;
+import mendel.event.EventReactor;
+
 import mendel.fs.Block;
 import mendel.fs.FileSystemException;
 import mendel.fs.MendelFileSystem;
-import mendel.network.*;
+
+import mendel.network.ClientConnectionPool;
+import mendel.network.HostIdentifier;
+import mendel.network.NetworkInfo;
+import mendel.network.NodeInfo;
+import mendel.network.ServerMessageRouter;
+
 import mendel.query.SimilarityQuery;
 import mendel.query.QueryResult;
+import mendel.data.Metadata;
 import mendel.serialize.SerializationException;
 import mendel.util.Version;
 import mendel.vptree.types.ProteinSequence;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -393,13 +417,17 @@ public class StorageNode implements Node {
 //                        queryMatch += match.substring(match.length() - (pos2 - pos1));
 //                    }
 //                }
-                ProteinSequence matchingSequence = new ProteinSequence(queryResults.get(0).getValue().getWholeSequece());
-                matchingSequence.setSequenceID(queryResults.get(0).getValue().getSequenceID());
+                ProteinSequence matchingSequence = new ProteinSequence(
+                        queryResults.get(0).getValue().getWholeSequece());
+                matchingSequence.setSequenceID(
+                        queryResults.get(0).getValue().getSequenceID());
                 matchingSequence.setSequencePos(initalPos);
-                matchingSequence.setSequenceID(queryResults.get(0).getValue().getSequenceID());
+                matchingSequence.setSequenceID(
+                        queryResults.get(0).getValue().getSequenceID());
 
-                resultList.add(new QueryResult(tracker.getResults().get(0).getQuery(), matchingSequence));
-            }
+                resultList.add(new QueryResult(tracker.getResults()
+                        .get(0).getQuery(), matchingSequence));
+        }
         }
         System.out.println("FOUND: " + resultList.size());
         timer = System.nanoTime() - timer;

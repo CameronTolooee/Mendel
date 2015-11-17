@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -141,6 +141,7 @@ public class SystemConfig {
             return;
         }
 
+        /* Extract the HOME directory info */
         String home = prop.getProperty("mendel.home.dir");
         if (home == null || home.equals("")) {
             logger.warning("Property mendel.home.dir not defined.");
@@ -153,6 +154,7 @@ public class SystemConfig {
                 : homeDir + "/conf";
         logger.info("Mendel configuration directory set to: " + confDir);
 
+        /* Extract the installation ROOT directory info */
         String storageDir = prop.getProperty("mendel.root.dir");
         if (storageDir == null || storageDir.equals("")) {
             logger.warning("Property mendel.root.dir not defined.");
@@ -161,12 +163,14 @@ public class SystemConfig {
         rootDir = storageDir;
         logger.info("Mendel file system storage root set to: " + rootDir);
 
+        /* Determine if PSEUDOFS is enabled */
         String psuedoProp = prop.getProperty("enable.psuedoFS");
         psuedoFS = Boolean.parseBoolean(psuedoProp);
         if(psuedoFS) {
             logger.info("PsuedoFS mode enabled");
         }
 
+        /* Extract the directory of the staging data */
         String staged = prop.getProperty("staged.data.dir");
         if (staged == null || staged.equals("")) {
             logger.warning("Property staged.data.dir not defined");

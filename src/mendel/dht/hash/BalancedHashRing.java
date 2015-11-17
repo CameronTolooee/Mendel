@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2013, Colorado State University
+Copyright (c) 2015, Colorado State University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -27,7 +27,6 @@ package mendel.dht.hash;
 
 import mendel.data.Metadata;
 import mendel.vptree.types.ProteinSequence;
-import mendel.vptree.types.Sequence;
 
 import java.math.BigInteger;
 import java.util.TreeMap;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,12 +54,11 @@ public class NetworkConfig {
     /**
      * Reads a network description directory from disk.
      * 
-     * @param directory
-     *            full path name of the network description directory.
+     * @param directory The full path name of the network description directory
      * 
-     * @return NetworkInfo containing the network information read from the
-     *         directory.
-     * @throws FileNotFoundException, IOException 
+     * @return the NetworkInfo containing the network information read from the
+     *         directory
+     * @throws FileNotFoundException, IOException
      */
     public static NetworkInfo readNetworkDescription(String directory)
             throws FileNotFoundException, IOException {
@@ -77,12 +76,12 @@ public class NetworkConfig {
     }
 
     /**
-     * Read host:port pairs from a group description file (*.group).
+     * Read host:port pairs from a Mendel node configuration file and create
+     * the network overlay description GroupInfo.
      * 
-     * @param file
-     *            File containing the group members.
+     * @param file the configuration File containing the group members
      * 
-     * @return GroupInfo containing the hosts read from file.
+     * @return the GroupInfo containing the hosts read from file
      * @throws IOException 
      */
     public static NetworkInfo readNodesFile(File file)

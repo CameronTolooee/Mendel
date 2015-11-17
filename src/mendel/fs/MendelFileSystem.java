@@ -259,7 +259,7 @@ public class MendelFileSystem implements FileSystem {
 
         /* Add metadata to the in-memory map */
             //metadataMap.put(block.getMetadata().getSeqBlock(), blockPath);
-            metadataTree.add(block.getMetadata().get(i).getSequence());
+            metadataTree.add(block.getMetadata().get(i).getSegment());
 
         /* Don't write data to disk if pseudoFS is enabled */
             if (!pseudoFS) {

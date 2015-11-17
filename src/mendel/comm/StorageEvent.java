@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,18 +34,27 @@ import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
 
 /**
- * Represents an internal storage event at a {@link mendel.dht.StorageNode}.
+ * Represents an internal storage event at a {@link mendel.dht.StorageNode}
+ * to store sequence segments within the storage blocks.
  *
- * @author malensek
+ * @author ctolooee
  */
 public class StorageEvent implements Event {
 
     private Block block;
 
+    /**
+     * Constructs a StorageEvent to store the given Block.
+     * @param block the block to be stored.
+     */
     public StorageEvent(Block block) {
         this.block = block;
     }
 
+    /**
+     * Returns the block to be stored.
+     * @return the block to be stored
+     */
     public Block getBlock() {
         return block;
     }

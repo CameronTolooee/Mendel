@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,17 +34,29 @@ import mendel.serialize.SerializationInputStream;
 import mendel.serialize.SerializationOutputStream;
 
 /**
- * Represents a client request for storage at a Mendel
- * {@link mendel.dht.StorageNode}.
+ * Represents a client's request for storing an inverted indexing block(s) at a
+ * Mendel {@link mendel.dht.StorageNode}. Since requests can be forwarded to
+ * any node (likely not the final destination)  the request must be captured to
+ * forward to the correct storage location. This is functionally the same as
+ * a {@link mendel.comm.StorageEvent}, but with the above distinction.
  */
 public class StorageRequest implements Event {
 
     private Block block;
 
+    /**
+     * Constructs a StorageRequest to store a Block on an individual
+     * StorageNode.
+     * @param block the Block to be stored
+     */
     public StorageRequest(Block block) {
         this.block = block;
     }
 
+    /**
+     * Returns the block to be stored.
+     * @return the block to be stored
+     */
     public Block getBlock() {
         return block;
     }

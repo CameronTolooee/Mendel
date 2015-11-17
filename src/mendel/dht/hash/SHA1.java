@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2013, Colorado State University
+Copyright (c) 2015, Colorado State University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -43,7 +43,7 @@ public class SHA1 implements HashFunction<Metadata> {
 
     @Override
     public synchronized BigInteger hash(Metadata data) throws HashException {
-        return new BigInteger(1, checksum.hash(data.getSequence().toString().getBytes()));
+        return new BigInteger(1, checksum.hash(data.getSegment().toString().getBytes()));
     }
 
     public synchronized BigInteger hash(long data) throws HashException {

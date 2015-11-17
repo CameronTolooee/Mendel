@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Colorado State University All rights reserved.
+ * Copyright (c) 2015, Colorado State University All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,6 +37,7 @@ import java.io.IOException;
 
 public interface Node {
 
-    public void init() throws IOException, EventException, InterruptedException, SerializationException, HashException, HashTopologyException, PartitionerException, FileSystemException, PartitionException;
-
+    public void init() throws IOException, EventException, InterruptedException,
+            SerializationException, HashException, HashTopologyException,
+            PartitionerException, FileSystemException, PartitionException;
 }
