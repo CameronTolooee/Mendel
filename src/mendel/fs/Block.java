@@ -44,7 +44,7 @@ public class Block implements ByteSerializable {
     public Block(byte[] data, String name) throws IOException, SerializationException {
         this.metadata = new ArrayList<>();
         this.data = new ArrayList<>();
-        metadata.add(new Metadata(data, name));
+        //metadata.add(new Metadata(data, name));
         this.data.add(data);
     }
 

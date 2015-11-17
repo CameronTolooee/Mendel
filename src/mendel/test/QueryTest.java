@@ -29,7 +29,7 @@ import mendel.data.Metadata;
 import mendel.fs.Block;
 import mendel.fs.MendelFileSystem;
 import mendel.query.SimilarityQuery;
-import mendel.vptree.Kmer;
+import mendel.vptree.types.ProteinSequence;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +48,7 @@ public class QueryTest {
         }
         String seq = "CCCCCCCCC";
         String uuid = UUID.nameUUIDFromBytes(seq.getBytes()).toString();
-        Metadata meta = new Metadata(new Kmer(seq), uuid);
+        Metadata meta = new Metadata(new ProteinSequence(seq), uuid);
         blocks.add(new Block(meta, seq.getBytes()));
 
         /* Insert the blocks */
@@ -59,11 +59,11 @@ public class QueryTest {
         }
 
         /* Execute some queries */
-        SimilarityQuery q = new SimilarityQuery("CCCCCCCCC");
+        SimilarityQuery q = new SimilarityQuery("CCCCCCCCC", "CCCCCCCCC");
         System.out.println("Query: " + q);
-        List<Kmer> results = fs.nearestNeighboQquery(q);
+        List<ProteinSequence> results = fs.nearestNeighborQuery("CCCCCCC");
 
-        for (Kmer result : results) {
+        for (ProteinSequence result : results) {
             System.out.println(result);
         }
 
@@ -77,7 +77,7 @@ public class QueryTest {
         for (int i = 0; i < 9; i++) {
             sequence += chars[rand.nextInt(4)];
         }
-        Metadata meta = new Metadata(new Kmer(sequence),
+        Metadata meta = new Metadata(new ProteinSequence(sequence),
                 UUID.nameUUIDFromBytes(sequence.getBytes()).toString());
         return new Block(meta, sequence.getBytes());
     }
